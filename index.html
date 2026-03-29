@@ -333,7 +333,7 @@ async function queryDB(token, dbId, type) {
 }
 
 async function notionQuery(token, dbId, body) {
-  const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+  const res = await fetch(`https://notion-proxy.tca-hsuoo.workers.dev/notion/v1/databases/${dbId}/query`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -644,7 +644,7 @@ async function submitTodo(idx) {
       properties,
     };
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
+    const res = await fetch('https://notion-proxy.tca-hsuoo.workers.dev/notion/v1/pages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
