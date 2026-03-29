@@ -3,690 +3,715 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Capture → Notion</title>
+<title>AI Capture</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #f5f4f0; --card: #ffffff; --border: #e0ddd6;
-  --text: #1a1a1a; --muted: #6b6860; --accent: #e8571a;
-  --accent-hover: #c94a14; --teal: #0f6e56; --success: #1d9e75;
-  --amber: #ba7517; --purple: #534ab7; --tag-bg: #f0ede6;
-  --sidebar-w: 300px;
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--card:#fff;--border:#e0ddd6;
+  --text:#1a1a1a;--muted:#6b6860;--accent:#e8571a;--ah:#c94a14;
+  --teal:#0f6e56;--success:#1d9e75;--amber:#ba7517;--purple:#534ab7;
+  --tag:#f0ede6;--sw:280px
 }
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
 
 /* HEADER */
-.header { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
-.logo { font-size: 15px; font-weight: 600; color: var(--accent); cursor: pointer; }
-.header-right { display: flex; gap: 8px; align-items: center; }
-.btn-sm { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-size: 13px; color: var(--muted); cursor: pointer; }
-.btn-sm:hover { border-color: var(--accent); color: var(--accent); }
-.queue-badge { background: var(--accent); color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 600; margin-left: 4px; display: none; }
+.hd{background:var(--card);border-bottom:1px solid var(--border);padding:11px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.logo{font-size:15px;font-weight:600;color:var(--accent);cursor:pointer}
+.hd-r{display:flex;gap:8px}
+.bsm{background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:13px;color:var(--muted);cursor:pointer}
+.bsm:hover{border-color:var(--accent);color:var(--accent)}
 
 /* LAYOUT */
-.layout { display: flex; height: calc(100vh - 49px); }
+.layout{display:flex;height:calc(100vh - 48px)}
 
-/* SIDEBAR - queue */
-.sidebar { width: var(--sidebar-w); border-right: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; overflow: hidden; }
-.sidebar-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
-.queue-list { flex: 1; overflow-y: auto; padding: 8px; }
-.queue-item { border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; border: 1.5px solid transparent; transition: all 0.1s; background: var(--bg); }
-.queue-item:hover { border-color: var(--border); }
-.queue-item.active { border-color: var(--accent); background: #fdf2ec; }
-.queue-item.done { opacity: 0.5; }
-.queue-item-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.queue-item-status { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
-.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.dot-analyzing { background: var(--amber); animation: pulse 1s infinite; }
-.dot-pending { background: var(--accent); }
-.dot-done { background: var(--success); }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.queue-empty { text-align: center; padding: 40px 16px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+/* SIDEBAR */
+.sb{width:var(--sw);border-right:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sb-hd{padding:13px 15px 9px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.sb-cnt{flex:1;overflow-y:auto;padding:8px}
+.qi{border-radius:8px;padding:9px 11px;margin-bottom:5px;cursor:pointer;border:1.5px solid transparent;background:var(--bg)}
+.qi:hover{border-color:var(--border)}
+.qi.active{border-color:var(--accent);background:#fdf2ec}
+.qi.done{opacity:.5}
+.qi-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.qi-st{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.da{background:var(--amber);animation:pulse 1s infinite}
+.dp{background:var(--accent)}
+.dd{background:var(--success)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.q-empty{text-align:center;padding:36px 14px;font-size:13px;color:var(--muted);line-height:1.7}
 
-/* MAIN AREA */
-.main-area { flex: 1; overflow-y: auto; padding: 20px; }
+/* MAIN */
+.ma{flex:1;overflow-y:auto;padding:18px}
 
 /* INPUT CARD */
-.input-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
-.source-tags { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-.tag { border: 1.5px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 13px; color: var(--muted); cursor: pointer; background: var(--card); }
-.tag.active { border-color: var(--accent); color: var(--accent); background: #fdf2ec; font-weight: 600; }
-.input-area { width: 100%; min-height: 90px; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; font-size: 14px; font-family: inherit; color: var(--text); background: var(--bg); resize: vertical; outline: none; line-height: 1.6; }
-.input-area:focus { border-color: var(--accent); background: #fff; }
-.input-area::placeholder { color: #aaa; }
-.input-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-.char-hint { font-size: 12px; color: var(--muted); }
-.btn-analyze { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
-.btn-analyze:hover { background: var(--accent-hover); }
-.btn-analyze:disabled { background: #ccc; cursor: not-allowed; }
+.ic{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.src-tags{display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap}
+.tag{border:1.5px solid var(--border);border-radius:20px;padding:4px 11px;font-size:13px;color:var(--muted);cursor:pointer;background:var(--card)}
+.tag.active{border-color:var(--accent);color:var(--accent);background:#fdf2ec;font-weight:600}
+.ia{width:100%;min-height:88px;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-family:inherit;color:var(--text);background:var(--bg);resize:vertical;outline:none;line-height:1.6}
+.ia:focus{border-color:var(--accent);background:#fff}
+.ia::placeholder{color:#bbb}
+.if{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
+.ch{font-size:12px;color:var(--muted)}
+.ban{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer}
+.ban:hover{background:var(--ah)}
+.ban:disabled{background:#ccc;cursor:not-allowed}
 
 /* REVIEW CARD */
-.review-card { background: var(--card); border: 1.5px solid var(--success); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-.review-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.review-label { font-size: 13px; font-weight: 600; color: var(--success); }
-.confidence { font-size: 12px; color: var(--muted); background: var(--tag-bg); padding: 3px 10px; border-radius: 20px; }
+.rc{background:var(--card);border:1.5px solid var(--success);border-radius:12px;padding:18px;margin-bottom:14px}
+.rc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rc-label{font-size:13px;font-weight:600;color:var(--success)}
+.conf{font-size:12px;color:var(--muted);background:var(--tag);padding:3px 9px;border-radius:20px}
 
-/* PATH DISPLAY */
-.path-display { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 9px 12px; background: var(--tag-bg); border-radius: 8px; margin-bottom: 12px; }
-.path-item { font-size: 13px; font-weight: 500; }
-.path-sep { font-size: 13px; color: var(--muted); }
-.path-final { font-size: 13px; font-weight: 600; color: var(--accent); }
+/* PATH */
+.path{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:8px 11px;background:var(--tag);border-radius:8px;margin-bottom:11px}
+.pi{font-size:13px;font-weight:500}
+.ps{font-size:13px;color:var(--muted)}
+.pf{font-size:13px;font-weight:600;color:var(--accent)}
 
-.reason-box { background: #f9f8f5; border-left: 3px solid var(--amber); border-radius: 0 8px 8px 0; padding: 9px 12px; margin-bottom: 14px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.reason{background:#f9f8f5;border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:8px 11px;margin-bottom:12px;font-size:13px;color:var(--muted);line-height:1.6}
 
 /* FIELDS */
-.field { margin-bottom: 12px; }
-.field-label { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
-.field-value { font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; line-height: 1.5; outline: none; width: 100%; }
-.field-value:focus { border-color: var(--accent); background: #fff; }
-.field input[type="date"] { width: 100%; font-size: 14px; font-family: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; outline: none; }
-.field input[type="date"]:focus { border-color: var(--accent); background: #fff; }
+.fl{margin-bottom:11px}
+.fl-lb{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.fv{font-size:14px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;width:100%;outline:none}
+.fv:focus{border-color:var(--accent);background:#fff}
+input[type=date].fv{font-family:inherit}
 
-/* TREE SELECTOR */
-.tree-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--accent); margin-bottom: 10px; user-select: none; }
-.tree-toggle:hover { text-decoration: underline; }
-.tree-panel { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+/* TREE */
+.tree-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--accent);margin-bottom:9px;user-select:none}
+.tree-toggle:hover{text-decoration:underline}
+.tree-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:13px}
 
-/* Layer 1: Plans - horizontal pill tags */
-.tree-plans-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; background: var(--tag-bg); border-bottom: 1px solid var(--border); }
-.tree-plan-pill { border: 1.5px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; background: var(--card); transition: all 0.1s; white-space: nowrap; }
-.tree-plan-pill:hover { border-color: var(--accent); color: var(--accent); }
-.tree-plan-pill.selected { border-color: var(--accent); color: var(--accent); background: #fdf2ec; }
+/* Layer 1: plans */
+.plans-row{display:flex;flex-wrap:wrap;gap:6px;padding:11px;background:var(--tag);border-bottom:1px solid var(--border)}
+.plan-pill{border:1.5px solid var(--border);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;background:var(--card);white-space:nowrap;transition:all .1s}
+.plan-pill:hover{border-color:var(--accent);color:var(--accent)}
+.plan-pill.sel{border-color:var(--accent);color:var(--accent);background:#fdf2ec}
 
-/* Layer 2: Projects - horizontal chips, toggleable */
-.tree-projects-area { padding: 10px 12px; background: #faf9f6; border-bottom: 1px solid var(--border); display: none; }
-.tree-projects-area.visible { display: block; }
-.tree-projects-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.tree-proj-chip { border: 1px solid var(--border); border-radius: 8px; padding: 5px 11px; font-size: 12px; color: var(--muted); cursor: pointer; background: var(--card); display: flex; align-items: center; gap: 5px; transition: all 0.1s; }
-.tree-proj-chip:hover { border-color: var(--accent); color: var(--text); }
-.tree-proj-chip.open { border-color: var(--accent); color: var(--accent); background: #fdf2ec; font-weight: 600; }
-.tree-proj-chip .chip-arrow { font-size: 9px; transition: transform 0.15s; }
-.tree-proj-chip.open .chip-arrow { transform: rotate(90deg); }
+/* Layer 2: projects */
+.projs-area{padding:9px 11px;background:#faf9f6;border-bottom:1px solid var(--border);display:none}
+.projs-area.show{display:block}
+.projs-row{display:flex;flex-wrap:wrap;gap:6px}
+.proj-chip{border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;background:var(--card);display:flex;align-items:center;gap:4px;transition:all .1s}
+.proj-chip:hover{border-color:var(--accent);color:var(--text)}
+.proj-chip.open{border-color:var(--accent);color:var(--accent);background:#fdf2ec;font-weight:600}
+.chip-arr{font-size:9px;transition:transform .15s}
+.proj-chip.open .chip-arr{transform:rotate(90deg)}
 
-/* Layer 3: Checkpoints - grid under selected project */
-.tree-cp-area { padding: 0 12px 10px; display: none; }
-.tree-cp-area.visible { display: block; }
-.tree-cp-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin: 8px 0 6px; }
-.tree-cp-grid { display: flex; flex-wrap: wrap; gap: 5px; }
-.tree-cp-item { border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text); cursor: pointer; background: var(--card); transition: all 0.1s; }
-.tree-cp-item:hover { border-color: var(--accent); color: var(--accent); background: #fdf2ec; }
-.tree-cp-item.selected { border-color: var(--accent); color: var(--accent); background: #fdf2ec; font-weight: 600; }
+/* Layer 3: checkpoints */
+.cp-area{padding:0 11px 10px;display:none}
+.cp-area.show{display:block}
+.cp-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:8px 0 6px}
+.cp-grid{display:flex;flex-wrap:wrap;gap:5px}
+.cp-item{border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:12px;color:var(--text);cursor:pointer;background:var(--card);transition:all .1s}
+.cp-item:hover{border-color:var(--accent);color:var(--accent);background:#fdf2ec}
+.cp-item.sel{border-color:var(--accent);color:var(--accent);background:#fdf2ec;font-weight:600}
 
 /* ACTIONS */
-.actions { display: flex; gap: 10px; margin-top: 16px; }
-.btn-submit { flex: 1; background: var(--success); color: #fff; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; }
-.btn-submit:hover { background: #0a8a63; }
-.btn-submit:disabled { background: #ccc; cursor: not-allowed; }
-.btn-skip { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 11px 18px; font-size: 13px; color: var(--muted); cursor: pointer; }
-.btn-skip:hover { border-color: #aaa; }
+.acts{display:flex;gap:9px;margin-top:14px}
+.bsubmit{flex:1;background:var(--success);color:#fff;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer}
+.bsubmit:hover{background:#0a8a63}
+.bsubmit:disabled{background:#ccc;cursor:not-allowed}
+.bskip{background:none;border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--muted);cursor:pointer}
+.bskip:hover{border-color:#aaa}
 
 /* STATUS */
-.status-msg { text-align: center; padding: 14px; font-size: 14px; border-radius: 10px; margin-bottom: 14px; }
-.status-msg.success { background: #e6f7f1; color: var(--success); border: 1px solid #9fe1cb; }
-.status-msg.error { background: #fce8e8; color: #a32d2d; border: 1px solid #f09595; }
+.smsg{text-align:center;padding:13px;font-size:14px;border-radius:10px;margin-bottom:13px}
+.smsg.ok{background:#e6f7f1;color:var(--success);border:1px solid #9fe1cb}
+.smsg.err{background:#fce8e8;color:#a32d2d;border:1px solid #f09595}
+.smsg.loading{background:var(--tag);color:var(--muted)}
 
-/* SETTINGS */
-.settings-wrap { padding: 20px; max-width: 540px; }
-.settings-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-.settings-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
-.settings-field { margin-bottom: 16px; }
-.settings-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
-.settings-hint { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
-.settings-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: monospace; color: var(--text); background: var(--bg); outline: none; }
-.settings-input:focus { border-color: var(--accent); background: #fff; }
-.btn-save { background: var(--purple); color: #fff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; margin-right: 8px; }
-.btn-sync { background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.sync-status { margin-top: 10px; font-size: 13px; color: var(--muted); }
-.sync-info { font-size: 13px; color: var(--muted); line-height: 1.8; }
+/* SETTINGS / HISTORY */
+.pg{padding:18px;max-width:520px}
+.pgc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.pgt{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.pgf{margin-bottom:14px}
+.pgl{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.pgh{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.5}
+.pgi{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:monospace;color:var(--text);background:var(--bg);outline:none}
+.pgi:focus{border-color:var(--accent);background:#fff}
+.bsave{background:var(--purple);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;margin-right:7px}
+.bsync{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.sync-st{margin-top:9px;font-size:13px;color:var(--muted)}
 
-/* SETUP NOTICE */
-.setup-notice { background: #fdf2ec; border: 1.5px solid var(--accent); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
-.setup-title { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 5px; }
-.setup-text { font-size: 13px; color: var(--text); line-height: 1.6; }
-.setup-steps { margin-top: 8px; padding-left: 16px; }
-.setup-steps li { font-size: 13px; color: var(--muted); margin-bottom: 3px; }
-
-/* HISTORY */
-.history-wrap { padding: 20px; }
-.history-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
-.history-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
-.history-item { padding: 11px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; }
-.history-item:last-child { border-bottom: none; }
-.history-name { font-size: 14px; color: var(--text); }
-.history-path { font-size: 12px; color: var(--accent); margin-top: 2px; }
-.history-meta { font-size: 12px; color: var(--muted); white-space: nowrap; text-align: right; }
-.empty-state { text-align: center; padding: 40px 20px; font-size: 13px; color: var(--muted); }
+.hi{padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:11px}
+.hi:last-child{border-bottom:none}
+.hn{font-size:14px;color:var(--text)}
+.hp{font-size:12px;color:var(--accent);margin-top:2px}
+.hm{font-size:12px;color:var(--muted);white-space:nowrap;text-align:right}
+.empty{text-align:center;padding:36px 18px;font-size:13px;color:var(--muted)}
 
 /* SPINNER */
-.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 5px; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.sp{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* MOBILE */
-@media (max-width: 600px) {
-  :root { --sidebar-w: 240px; }
-  .layout { flex-direction: column; height: auto; }
-  .sidebar { width: 100%; height: 160px; border-right: none; border-bottom: 1px solid var(--border); }
-  .main-area { padding: 14px; }
+/* SETUP */
+.setup{background:#fdf2ec;border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.setup-t{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.setup-b{font-size:13px;color:var(--text);line-height:1.6}
+
+@media(max-width:600px){
+  :root{--sw:220px}
+  .layout{flex-direction:column;height:auto}
+  .sb{width:100%;height:150px;border-right:none;border-bottom:1px solid var(--border)}
 }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo" onclick="showView('main')">⚡ AI Capture</div>
-  <div class="header-right">
-    <button class="btn-sm" onclick="showView('history')">記錄</button>
-    <button class="btn-sm" onclick="showView('settings')">設定</button>
+<div class="hd">
+  <div class="logo" onclick="gomain()">⚡ AI Capture</div>
+  <div class="hd-r">
+    <button class="bsm" onclick="gopage('history')">記錄</button>
+    <button class="bsm" onclick="gopage('settings')">設定</button>
   </div>
 </div>
 
-<div class="layout" id="app-layout">
-  <!-- SIDEBAR: queue -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
+<!-- MAIN VIEW -->
+<div id="view-main" class="layout">
+  <div class="sb">
+    <div class="sb-hd">
       <span>待處理佇列</span>
-      <span id="queue-count" style="font-size:12px;color:var(--muted)">0 筆</span>
+      <span id="qcount" style="font-size:12px;color:var(--muted)">0 筆</span>
     </div>
-    <div class="queue-list" id="queue-list">
-      <div class="queue-empty">貼入訊息後<br>會出現在這裡</div>
+    <div class="sb-cnt" id="qlist">
+      <div class="q-empty">貼入訊息後<br>會出現在這裡</div>
     </div>
   </div>
-
-  <!-- MAIN -->
-  <div class="main-area" id="main-area">
-
-    <!-- SETUP NOTICE -->
-    <div class="setup-notice" id="setup-notice" style="display:none">
-      <div class="setup-title">⚙️ 請先完成設定</div>
-      <div class="setup-text">點右上角「設定」，填入 Notion Token 與 Claude API Key，然後同步資料庫。</div>
+  <div class="ma" id="main-area">
+    <div class="setup" id="setup-notice" style="display:none">
+      <div class="setup-t">⚙️ 請先完成設定</div>
+      <div class="setup-b">點右上角「設定」，填入 Notion Token 與 Claude API Key，然後同步資料庫。</div>
     </div>
-
-    <!-- INPUT -->
-    <div class="input-card" id="view-input">
-      <div class="source-tags">
-        <div class="tag active" onclick="selectSource(this,'Outlook')">📧 Outlook</div>
-        <div class="tag" onclick="selectSource(this,'Line')">💬 Line</div>
-        <div class="tag" onclick="selectSource(this,'會議')">🗓 會議</div>
-        <div class="tag" onclick="selectSource(this,'其他')">✏️ 其他</div>
+    <div class="ic">
+      <div class="src-tags">
+        <div class="tag active" onclick="setSrc(this,'Outlook')">📧 Outlook</div>
+        <div class="tag" onclick="setSrc(this,'Line')">💬 Line</div>
+        <div class="tag" onclick="setSrc(this,'會議')">🗓 會議</div>
+        <div class="tag" onclick="setSrc(this,'其他')">✏️ 其他</div>
       </div>
-      <textarea class="input-area" id="input-text" placeholder="把 Outlook 信件、Line 訊息貼在這裡..." oninput="updateChar()"></textarea>
-      <div class="input-footer">
-        <span class="char-hint" id="char-count">0 字</span>
-        <button class="btn-analyze" id="btn-analyze" onclick="submitInput()">🔍 AI 分析</button>
+      <textarea class="ia" id="txt" placeholder="把 Outlook 信件、Line 訊息貼在這裡..." oninput="onInput()"></textarea>
+      <div class="if">
+        <span class="ch" id="cc">0 字</span>
+        <button class="ban" onclick="doAnalyze()">🔍 AI 分析</button>
       </div>
     </div>
-
-    <!-- REVIEW AREA -->
-    <div id="review-area"></div>
-
+    <div id="rev-area"></div>
   </div>
 </div>
 
-<!-- SETTINGS VIEW -->
+<!-- SETTINGS -->
 <div id="view-settings" style="display:none">
-  <div class="settings-wrap">
-    <div class="settings-card">
-      <div class="settings-title">設定</div>
-      <div class="settings-field">
-        <div class="settings-label">Notion API Token</div>
-        <div class="settings-hint">ANTIGRAVITY Integration Token（secret_... 開頭）</div>
-        <input class="settings-input" type="password" id="notion-token" placeholder="secret_...">
+  <div class="pg">
+    <div class="pgc">
+      <div class="pgt">設定</div>
+      <div class="pgf">
+        <div class="pgl">Notion API Token</div>
+        <div class="pgh">ANTIGRAVITY Integration Token（secret_... 開頭）</div>
+        <input class="pgi" type="password" id="ntoken" placeholder="secret_...">
       </div>
-      <div class="settings-field">
-        <div class="settings-label">Claude API Key</div>
-        <div class="settings-hint">Anthropic API Key（sk-ant-... 開頭）</div>
-        <input class="settings-input" type="password" id="claude-key" placeholder="sk-ant-...">
+      <div class="pgf">
+        <div class="pgl">Claude API Key</div>
+        <div class="pgh">Anthropic API Key（sk-ant-... 開頭）</div>
+        <input class="pgi" type="password" id="ckey" placeholder="sk-ant-...">
       </div>
-      <button class="btn-save" onclick="saveSettings()">💾 儲存</button>
-      <button class="btn-sync" onclick="syncNotion()">🔄 同步 Notion</button>
-      <div class="sync-status" id="sync-status"></div>
+      <button class="bsave" onclick="saveCfg()">💾 儲存</button>
+      <button class="bsync" onclick="doSync()">🔄 同步 Notion</button>
+      <div class="sync-st" id="syncst"></div>
     </div>
-    <div class="settings-card" id="sync-info-card" style="display:none">
-      <div class="settings-title">已同步資料</div>
-      <div class="sync-info" id="sync-info-content"></div>
+    <div class="pgc" id="syncinfo" style="display:none">
+      <div class="pgt">已同步資料</div>
+      <div id="syncinfo-body" style="font-size:13px;color:var(--muted);line-height:1.9"></div>
     </div>
   </div>
 </div>
 
-<!-- HISTORY VIEW -->
+<!-- HISTORY -->
 <div id="view-history" style="display:none">
-  <div class="history-wrap">
-    <div class="history-card">
-      <div class="history-title">最近建立記錄</div>
-      <div id="history-list"><div class="empty-state">還沒有記錄</div></div>
+  <div class="pg">
+    <div class="pgc">
+      <div class="pgt">最近建立記錄</div>
+      <div id="hlist"><div class="empty">還沒有記錄</div></div>
     </div>
   </div>
 </div>
 
 <script>
-const DB_IDS = {
+var PROXY = 'https://notion-proxy.tca-hsuoo.workers.dev/notion';
+var DBS = {
   plan:'2039cedd371d8092b7f3c222f43778c4',
-  planItem:'2039cedd371d80aea57ada5f5230dc41',
   project:'2039cedd371d800f9271c3a9c7610eb8',
-  projItem:'2039cedd371d805eb00dd135a945b469',
   checkpoint:'2039cedd371d80798955effa678aafe1',
-  todo:'2039cedd371d8010ae84f60c29f86990',
+  todo:'2039cedd371d8010ae84f60c29f86990'
 };
-const PROXY = 'https://notion-proxy.tca-hsuoo.workers.dev/notion';
 
-let currentSource = 'Outlook';
-let notionCache = null;
-let queue = []; // [{id, text, source, status:'analyzing'|'pending'|'done'|'skipped', result, selectedCP, selectedProj, selectedPlan}]
-let activeId = null;
+var src = 'Outlook';
+var cache = null;
+var queue = [];
+var activeId = null;
 
-// ===== INIT =====
-window.onload = () => {
-  loadSettings();
-  loadHistory();
-  const cached = localStorage.getItem('notion_cache');
-  if (cached) { notionCache = JSON.parse(cached); updateSyncInfo(); }
-  const t = localStorage.getItem('notion_token');
-  const k = localStorage.getItem('claude_key');
+// INIT
+window.onload = function() {
+  var t = ls('notion_token'), k = ls('claude_key');
+  var n = document.getElementById('ntoken'), c = document.getElementById('ckey');
+  if (n && t) n.value = t;
+  if (c && k) c.value = k;
   if (!t || !k) document.getElementById('setup-notice').style.display = 'block';
+  var cv = ls('notion_cache');
+  if (cv) { cache = JSON.parse(cv); showSyncInfo(); }
 };
 
-// ===== VIEW =====
-function showView(v) {
-  document.getElementById('app-layout').style.display = v==='main' ? 'flex' : 'none';
-  document.getElementById('view-settings').style.display = v==='settings' ? 'block' : 'none';
-  document.getElementById('view-history').style.display = v==='history' ? 'block' : 'none';
-  if (v==='history') loadHistory();
+function ls(k, v) {
+  if (v !== undefined) { localStorage.setItem(k, v); return; }
+  return localStorage.getItem(k);
 }
 
-// ===== SOURCE =====
-function selectSource(el, src) {
-  document.querySelectorAll('.tag').forEach(t=>t.classList.remove('active'));
+// VIEWS
+function gomain() {
+  document.getElementById('view-main').style.display = 'flex';
+  document.getElementById('view-settings').style.display = 'none';
+  document.getElementById('view-history').style.display = 'none';
+}
+function gopage(p) {
+  document.getElementById('view-main').style.display = 'none';
+  document.getElementById('view-settings').style.display = p === 'settings' ? 'block' : 'none';
+  document.getElementById('view-history').style.display = p === 'history' ? 'block' : 'none';
+  if (p === 'history') renderHistory();
+}
+
+// INPUT
+function setSrc(el, s) {
+  document.querySelectorAll('.src-tags .tag').forEach(function(t) { t.classList.remove('active'); });
   el.classList.add('active');
-  currentSource = src;
+  src = s;
 }
-function updateChar() {
-  document.getElementById('char-count').textContent = document.getElementById('input-text').value.length + ' 字';
+function onInput() {
+  var v = document.getElementById('txt').value;
+  document.getElementById('cc').textContent = v.length + ' 字';
 }
 
-// ===== QUEUE =====
+// QUEUE RENDER
 function renderQueue() {
-  const el = document.getElementById('queue-list');
-  const count = document.getElementById('queue-count');
-  const pending = queue.filter(q=>q.status!=='done'&&q.status!=='skipped').length;
-  count.textContent = pending + ' 筆';
-  if (queue.length === 0) {
-    el.innerHTML = '<div class="queue-empty">貼入訊息後<br>會出現在這裡</div>';
-    return;
-  }
-  el.innerHTML = queue.map(item => {
-    const statusMap = {analyzing:'分析中',pending:'待審核',done:'已完成',skipped:'已略過'};
-    const dotMap = {analyzing:'dot-analyzing',pending:'dot-pending',done:'dot-done',skipped:''};
-    return `<div class="queue-item ${item.id===activeId?'active':''} ${item.status==='done'||item.status==='skipped'?'done':''}"
-      onclick="selectQueueItem('${item.id}')">
-      <div class="queue-item-name">${item.text.substring(0,40)}${item.text.length>40?'...':''}</div>
-      <div class="queue-item-status">
-        <span class="dot ${dotMap[item.status]||''}"></span>
-        ${statusMap[item.status]||item.status}
-        ${item.status==='pending'?' · 等待確認':''}
-      </div>
-    </div>`;
+  var el = document.getElementById('qlist');
+  var cnt = document.getElementById('qcount');
+  var pending = queue.filter(function(q) { return q.status !== 'done' && q.status !== 'skipped'; }).length;
+  cnt.textContent = pending + ' 筆';
+  if (queue.length === 0) { el.innerHTML = '<div class="q-empty">貼入訊息後<br>會出現在這裡</div>'; return; }
+  var stMap = { analyzing:'分析中', pending:'待審核', done:'已完成', skipped:'已略過' };
+  var dotMap = { analyzing:'da', pending:'dp', done:'dd', skipped:'' };
+  el.innerHTML = queue.map(function(item) {
+    var isActive = item.id === activeId ? ' active' : '';
+    var isDone = (item.status === 'done' || item.status === 'skipped') ? ' done' : '';
+    var extra = item.status === 'pending' ? ' · 等待確認' : '';
+    return '<div class="qi' + isActive + isDone + '" onclick="selectQ(\'' + item.id + '\')">'
+      + '<div class="qi-name">' + item.text.substring(0,38) + (item.text.length > 38 ? '...' : '') + '</div>'
+      + '<div class="qi-st"><span class="dot ' + (dotMap[item.status] || '') + '"></span>' + (stMap[item.status] || '') + extra + '</div>'
+      + '</div>';
   }).join('');
 }
 
-function selectQueueItem(id) {
+function selectQ(id) {
   activeId = id;
   renderQueue();
-  const item = queue.find(q=>q.id===id);
+  var item = queue.filter(function(q) { return q.id === id; })[0];
   if (!item) return;
-  if (item.status==='pending') renderReview(item);
-  else if (item.status==='done'||item.status==='skipped') {
-    document.getElementById('review-area').innerHTML = `<div class="status-msg success">✅ 已${item.status==='done'?'寫入':'略過'}：${item.text.substring(0,30)}...</div>`;
+  if (item.status === 'pending') renderReview(item);
+  else if (item.status === 'done' || item.status === 'skipped') {
+    document.getElementById('rev-area').innerHTML = '<div class="smsg ok">已' + (item.status === 'done' ? '寫入' : '略過') + '：' + item.text.substring(0,30) + '</div>';
   }
 }
 
-// ===== SUBMIT INPUT =====
-async function submitInput() {
-  const text = document.getElementById('input-text').value.trim();
+// ANALYZE
+function doAnalyze() {
+  var text = document.getElementById('txt').value.trim();
   if (!text) { alert('請先輸入內容'); return; }
-  const claudeKey = localStorage.getItem('claude_key');
-  if (!claudeKey) { alert('請先在設定中填入 Claude API Key'); return; }
-  if (!notionCache) { alert('請先同步 Notion 資料庫'); return; }
+  var ckey = ls('claude_key');
+  if (!ckey) { alert('請先在設定中填入 Claude API Key'); return; }
+  if (!cache) { alert('請先同步 Notion 資料庫'); return; }
 
-  const id = 'q_' + Date.now();
-  const item = { id, text, source: currentSource, status: 'analyzing', result: null, selectedCP: null, selectedProj: null, selectedPlan: null };
+  var id = 'q' + Date.now();
+  var item = { id: id, text: text, source: src, status: 'analyzing', result: null, selCP: null, selProj: null, selPlan: null };
   queue.unshift(item);
   activeId = id;
   renderQueue();
-  document.getElementById('input-text').value = '';
-  document.getElementById('char-count').textContent = '0 字';
-  document.getElementById('review-area').innerHTML = `<div class="status-msg" style="background:#f0ede6;color:var(--muted)"><span class="spinner" style="border-color:var(--muted);border-top-color:transparent"></span>AI 分析中...</div>`;
+  document.getElementById('txt').value = '';
+  document.getElementById('cc').textContent = '0 字';
+  document.getElementById('rev-area').innerHTML = '<div class="smsg loading"><span class="sp"></span>AI 分析中...</div>';
 
-  try {
-    const result = await callClaude(text, currentSource);
-    item.result = result;
-    item.status = 'pending';
-    if (result && result.checkpoint) {
-      item.selectedCP = result.checkpoint;
-      item.selectedProj = result.project;
-      item.selectedPlan = result.plan;
-    }
-    renderQueue();
-    renderReview(item);
-  } catch(e) {
-    item.status = 'skipped';
-    renderQueue();
-    document.getElementById('review-area').innerHTML = `<div class="status-msg error">❌ 分析失敗：${e.message}</div>`;
-  }
+  callClaude(text, src, ckey)
+    .then(function(result) {
+      item.result = result;
+      item.status = 'pending';
+      item.selCP = result.checkpoint || null;
+      item.selProj = result.project || null;
+      item.selPlan = result.plan || null;
+      renderQueue();
+      renderReview(item);
+    })
+    .catch(function(e) {
+      item.status = 'skipped';
+      renderQueue();
+      document.getElementById('rev-area').innerHTML = '<div class="smsg err">❌ 分析失敗：' + e.message + '</div>';
+    });
 }
 
-// ===== CLAUDE =====
-async function callClaude(text, source) {
-  const claudeKey = localStorage.getItem('claude_key');
-  const ctx = buildContext();
-  const prompt = buildPrompt(text, source, ctx);
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+// CLAUDE API
+function callClaude(text, source, ckey) {
+  var ctx = buildCtx();
+  var prompt = buildPrompt(text, source, ctx);
+  return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': claudeKey,
+      'x-api-key': ckey,
       'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
+      'anthropic-dangerous-direct-browser-access': 'true'
     },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(e) { throw new Error(e.error && e.error.message ? e.error.message : 'Claude API 錯誤'); });
+    return res.json();
+  })
+  .then(function(data) {
+    var raw = data.content[0].text;
+    var clean = raw.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
   });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Claude API 錯誤'); }
-  const data = await res.json();
-  const raw = data.content[0].text;
-  const clean = raw.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
 }
 
-function buildContext() {
-  if (!notionCache) return {};
+function buildCtx() {
+  if (!cache) return {};
   return {
-    plans: notionCache.plans.map(p=>({id:p.id,name:p.name})),
-    projects: notionCache.projects.map(p=>({id:p.id,name:p.name,planIds:p.planIds||[]})),
-    checkpoints: notionCache.checkpoints.map(c=>({id:c.id,name:c.name,code:c.code||'',projectIds:c.projectIds||[]})),
+    plans: cache.plans.map(function(p) { return { id: p.id, name: p.name }; }),
+    projects: cache.projects.map(function(p) { return { id: p.id, name: p.name, planIds: p.planIds || [] }; }),
+    checkpoints: cache.checkpoints.map(function(c) { return { id: c.id, name: c.name, projectIds: c.projectIds || [] }; })
   };
 }
 
 function buildPrompt(text, source, ctx) {
-  return `你是 Notion 待辦事項建立助手。根據輸入內容，判斷應建立哪個待辦事項並對應到正確的查核點。
-
-## Notion 結構
-計劃：${JSON.stringify(ctx.plans)}
-專案（含所屬計劃ID）：${JSON.stringify(ctx.projects)}
-查核點（含所屬專案ID）：${JSON.stringify(ctx.checkpoints)}
-
-## 使用者輸入
-來源：${source}
-內容：${text}
-
-## TODO 命名規則（嚴格遵守）
-1. 必須以動詞開頭：回覆、確認、追蹤、提交、製作、校閱、撰寫、通知、聯繫、整理、準備、安排、修改、提供、完稿、請款、填寫
-2. 特殊符號前綴：⛔=會議類、⚠️=重要提交截止、❗=緊急確認、🆘=非常緊急、📞=電話聯繫、🚩=里程碑、無符號=一般
-3. 格式：符號＋動詞：對象或事項（例如「⚠️提交：小八確認 Q2業績簡報」）
-
-## 回傳格式（純 JSON，不要其他文字）
-{
-  "name": "待辦名稱（遵守命名規則）",
-  "doOn": "YYYY-MM-DD 或 null",
-  "checkpoint": {"id": "notion_page_id", "name": "查核點名稱"},
-  "project": {"id": "notion_page_id", "name": "專案名稱"},
-  "plan": {"id": "notion_page_id", "name": "計劃名稱"},
-  "reason": "判斷理由（20字以內）",
-  "confidence": "high/medium/low"
-}`;
+  return '你是 Notion 待辦事項建立助手。根據輸入內容，判斷應建立哪個待辦事項並對應到正確的查核點。\n\n'
+    + '## Notion 結構\n計劃：' + JSON.stringify(ctx.plans) + '\n'
+    + '專案（含所屬計劃ID）：' + JSON.stringify(ctx.projects) + '\n'
+    + '查核點（含所屬專案ID）：' + JSON.stringify(ctx.checkpoints) + '\n\n'
+    + '## 使用者輸入\n來源：' + source + '\n內容：' + text + '\n\n'
+    + '## TODO 命名規則（嚴格遵守）\n'
+    + '1. 必須以動詞開頭：回覆、確認、追蹤、提交、製作、校閱、撰寫、通知、聯繫、整理、準備、安排、修改、提供、完稿、請款、填寫\n'
+    + '2. 特殊符號前綴：⛔=會議類、⚠️=重要提交截止、❗=緊急確認、🆘=非常緊急、📞=電話聯繫、🚩=里程碑\n'
+    + '3. 格式：符號＋動詞：對象或事項（例如「⚠️提交：小八確認 Q2業績簡報」）\n\n'
+    + '## 回傳格式（純 JSON，不要其他文字）\n'
+    + '{"name":"待辦名稱","doOn":"YYYY-MM-DD 或 null","checkpoint":{"id":"notion_id","name":"查核點名稱"},"project":{"id":"notion_id","name":"專案名稱"},"plan":{"id":"notion_id","name":"計劃名稱"},"reason":"判斷理由20字以內","confidence":"high/medium/low"}';
 }
 
-// ===== RENDER REVIEW =====
+// RENDER REVIEW
 function renderReview(item) {
   if (!item.result) return;
-  const r = item.result;
-  const confColor = r.confidence==='high'?'var(--success)':r.confidence==='medium'?'var(--amber)':'#a32d2d';
-  const confText = r.confidence==='high'?'高信心':r.confidence==='medium'?'中信心':'低信心';
+  var r = item.result;
+  var confColor = r.confidence === 'high' ? 'var(--success)' : r.confidence === 'medium' ? 'var(--amber)' : '#a32d2d';
+  var confText = r.confidence === 'high' ? '高信心' : r.confidence === 'medium' ? '中信心' : '低信心';
+  var planName = (item.selPlan && item.selPlan.name) || '未知計劃';
+  var projName = (item.selProj && item.selProj.name) || '未知專案';
+  var cpName = (item.selCP && item.selCP.name) || '未指定查核點';
+  var dateVal = r.doOn || '';
 
-  document.getElementById('review-area').innerHTML = `
-    <div class="review-card" id="rc_${item.id}">
-      <div class="review-header">
-        <div class="review-label">📌 待審核</div>
-        <div class="confidence" style="color:${confColor}">${confText}</div>
-      </div>
-
-      <div class="path-display" id="path_${item.id}">
-        <span class="path-item">${item.selectedPlan?.name||'未知計劃'}</span>
-        <span class="path-sep">›</span>
-        <span class="path-item">${item.selectedProj?.name||'未知專案'}</span>
-        <span class="path-sep">›</span>
-        <span class="path-final">${item.selectedCP?.name||'未指定查核點'}</span>
-      </div>
-
-      <div class="reason-box">${r.reason||''}</div>
-
-      <div class="field">
-        <div class="field-label">待辦名稱</div>
-        <div class="field-value" id="todo-name_${item.id}" contenteditable="true">${r.name}</div>
-      </div>
-      <div class="field">
-        <div class="field-label">截止日期</div>
-        <input type="date" id="todo-date_${item.id}" value="${r.doOn||''}">
-      </div>
-
-      <div class="tree-toggle" onclick="toggleTree('${item.id}')">
-        <span id="tree-toggle-icon_${item.id}">▶</span> 手動選擇查核點
-      </div>
-      <div id="tree_${item.id}" style="display:none">
-        ${buildTree(item)}
-      </div>
-
-      <div class="actions">
-        <button class="btn-submit" onclick="submitTodo('${item.id}')">✅ 確認寫入 Notion</button>
-        <button class="btn-skip" onclick="skipItem('${item.id}')">略過</button>
-      </div>
-      <div id="submit-status_${item.id}"></div>
-    </div>`;
+  document.getElementById('rev-area').innerHTML =
+    '<div class="rc" id="rc_' + item.id + '">'
+    + '<div class="rc-hd"><div class="rc-label">📌 待審核</div><div class="conf" style="color:' + confColor + '">' + confText + '</div></div>'
+    + '<div class="path" id="path_' + item.id + '">'
+    + '<span class="pi">' + esc(planName) + '</span><span class="ps">›</span>'
+    + '<span class="pi">' + esc(projName) + '</span><span class="ps">›</span>'
+    + '<span class="pf">' + esc(cpName) + '</span></div>'
+    + '<div class="reason">' + esc(r.reason || '') + '</div>'
+    + '<div class="fl"><div class="fl-lb">待辦名稱</div>'
+    + '<div class="fv" id="tname_' + item.id + '" contenteditable="true">' + esc(r.name) + '</div></div>'
+    + '<div class="fl"><div class="fl-lb">截止日期</div>'
+    + '<input type="date" class="fv" id="tdate_' + item.id + '" value="' + dateVal + '"></div>'
+    + '<div class="tree-toggle" id="ttoggle_' + item.id + '" onclick="toggleTree(\'' + item.id + '\')">'
+    + '<span id="tarrow_' + item.id + '">▶</span> 手動選擇查核點</div>'
+    + '<div id="treepanel_' + item.id + '" style="display:none">' + buildTree(item) + '</div>'
+    + '<div class="acts">'
+    + '<button class="bsubmit" id="bsub_' + item.id + '" onclick="doSubmit(\'' + item.id + '\')">✅ 確認寫入 Notion</button>'
+    + '<button class="bskip" onclick="doSkip(\'' + item.id + '\')">略過</button></div>'
+    + '<div id="subst_' + item.id + '"></div>'
+    + '</div>';
 }
 
-// ===== TREE =====
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// TREE BUILDER
 function buildTree(item) {
-  if (!notionCache) return '<div style="padding:12px;font-size:13px;color:var(--muted)">尚未同步資料</div>';
-  const iid = item.id.replace(/[^a-z0-9]/g,'');
+  if (!cache) return '<div style="padding:11px;font-size:13px;color:var(--muted)">尚未同步資料</div>';
+  var iid = safeId(item.id);
 
-  const sortedPlans = [...notionCache.plans].sort((a,b) => {
-    const rank = n => n.includes('115')?0 : n.includes('114')?2 : 1;
+  // Sort plans: 115 first, others middle, 114 last
+  var sorted = cache.plans.slice().sort(function(a, b) {
+    function rank(n) { return n.indexOf('115') >= 0 ? 0 : n.indexOf('114') >= 0 ? 2 : 1; }
     return rank(a.name) - rank(b.name);
-  }).filter(plan => notionCache.projects.some(p => (p.planIds||[]).some(pid => pid.replace(/-/g,'') === plan.id.replace(/-/g,''))));
+  }).filter(function(plan) {
+    return cache.projects.some(function(p) {
+      return (p.planIds || []).some(function(pid) { return stripDash(pid) === stripDash(plan.id); });
+    });
+  });
 
-  const pillsHtml = sortedPlans.map(plan => {
-    const pid = 'pp_' + plan.id.replace(/-/g,'').substring(0,8) + '_' + iid;
-    return `<div class="tree-plan-pill" id="${pid}" onclick="selectPlan('${item.id}','${plan.id}','${plan.name.replace(/'/g,"\'")}','${pid}')">${plan.name}</div>`;
+  var pills = sorted.map(function(plan) {
+    var pid = 'pp_' + stripDash(plan.id).substring(0,8) + '_' + iid;
+    return '<div class="plan-pill" id="' + pid + '" onclick="selPlan(\'' + item.id + '\',\'' + plan.id + '\',\'' + escQ(plan.name) + '\',\'' + pid + '\')">' + esc(plan.name) + '</div>';
   }).join('');
 
-  return `<div class="tree-panel">
-    <div class="tree-plans-row" id="plans_row_${iid}">${pillsHtml}</div>
-    <div class="tree-projects-area" id="projs_area_${iid}">
-      <div class="tree-projects-row" id="projs_row_${iid}"></div>
-    </div>
-    <div class="tree-cp-area" id="cp_area_${iid}">
-      <div class="tree-cp-label" id="cp_label_${iid}"></div>
-      <div class="tree-cp-grid" id="cp_grid_${iid}"></div>
-    </div>
-  </div>`;
+  return '<div class="tree-wrap">'
+    + '<div class="plans-row" id="pr_' + iid + '">' + pills + '</div>'
+    + '<div class="projs-area" id="pa_' + iid + '"><div class="projs-row" id="prow_' + iid + '"></div></div>'
+    + '<div class="cp-area" id="ca_' + iid + '"><div class="cp-lbl" id="clbl_' + iid + '"></div><div class="cp-grid" id="cg_' + iid + '"></div></div>'
+    + '</div>';
 }
-function selectPlan(itemId, planId, planName, pillId) {
-  const iid = itemId.replace(/[^a-z0-9]/g,'');
-  document.querySelectorAll('#plans_row_'+iid+' .tree-plan-pill').forEach(el => el.classList.remove('selected'));
-  document.getElementById(pillId)?.classList.add('selected');
 
-  const projs = notionCache.projects.filter(p => (p.planIds||[]).some(pid => pid.replace(/-/g,'') === planId.replace(/-/g,'')));
-  const projsRow = document.getElementById('projs_row_'+iid);
-  const cpArea = document.getElementById('cp_area_'+iid);
-  if (cpArea) { cpArea.classList.remove('visible'); document.getElementById('cp_grid_'+iid).innerHTML = ''; }
+function stripDash(s) { return String(s).replace(/-/g, ''); }
+function safeId(s) { return String(s).replace(/[^a-z0-9]/g, ''); }
+function escQ(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
-  if (projsRow) {
-    projsRow.innerHTML = projs.map(proj => {
-      const chipId = 'chip_' + proj.id.replace(/-/g,'').substring(0,8) + '_' + iid;
-      const esc = s => s.replace(/'/g,"\'");
-      return '<div class="tree-proj-chip" id="'+chipId+'" onclick="selectProject(''+itemId+'',''+proj.id+'',''+esc(proj.name)+'',''+planId+'',''+esc(planName)+'',''+chipId+'')">'
-        +'<span class="chip-arrow">▶</span>'+proj.name+'</div>';
+function toggleTree(itemId) {
+  var panel = document.getElementById('treepanel_' + itemId);
+  var arrow = document.getElementById('tarrow_' + itemId);
+  if (panel.style.display === 'none') { panel.style.display = 'block'; arrow.textContent = '▼'; }
+  else { panel.style.display = 'none'; arrow.textContent = '▶'; }
+}
+
+// SELECT PLAN
+function selPlan(itemId, planId, planName, pillId) {
+  var iid = safeId(itemId);
+  document.querySelectorAll('#pr_' + iid + ' .plan-pill').forEach(function(el) { el.classList.remove('sel'); });
+  var pill = document.getElementById(pillId);
+  if (pill) pill.classList.add('sel');
+
+  var projs = cache.projects.filter(function(p) {
+    return (p.planIds || []).some(function(pid) { return stripDash(pid) === stripDash(planId); });
+  });
+
+  var ca = document.getElementById('ca_' + iid);
+  if (ca) { ca.classList.remove('show'); document.getElementById('cg_' + iid).innerHTML = ''; }
+
+  var prow = document.getElementById('prow_' + iid);
+  if (prow) {
+    prow.innerHTML = projs.map(function(proj) {
+      var chipId = 'chip_' + stripDash(proj.id).substring(0,8) + '_' + iid;
+      return '<div class="proj-chip" id="' + chipId + '" onclick="selProj(\'' + itemId + '\',\'' + proj.id + '\',\'' + escQ(proj.name) + '\',\'' + planId + '\',\'' + escQ(planName) + '\',\'' + chipId + '\')">'
+        + '<span class="chip-arr">▶</span>' + esc(proj.name) + '</div>';
     }).join('') || '<div style="font-size:12px;color:var(--muted)">無專案</div>';
   }
-  document.getElementById('projs_area_'+iid)?.classList.add('visible');
+  var pa = document.getElementById('pa_' + iid);
+  if (pa) pa.classList.add('show');
 }
 
-function selectProject(itemId, projId, projName, planId, planName, chipId) {
-  const iid = itemId.replace(/[^a-z0-9]/g,'');
-  const chip = document.getElementById(chipId);
-  const isOpen = chip?.classList.contains('open');
-  document.querySelectorAll('#projs_row_'+iid+' .tree-proj-chip').forEach(el => el.classList.remove('open'));
-  const cpArea = document.getElementById('cp_area_'+iid);
-  const cpGrid = document.getElementById('cp_grid_'+iid);
-  const cpLabel = document.getElementById('cp_label_'+iid);
-  if (isOpen) { cpArea?.classList.remove('visible'); return; }
-  chip?.classList.add('open');
+// SELECT PROJECT
+function selProj(itemId, projId, projName, planId, planName, chipId) {
+  var iid = safeId(itemId);
+  var chip = document.getElementById(chipId);
+  var isOpen = chip && chip.classList.contains('open');
 
-  const cps = notionCache.checkpoints.filter(c => (c.projectIds||[]).some(pid => pid.replace(/-/g,'') === projId.replace(/-/g,'')));
-  const item = queue.find(q=>q.id===itemId);
-  if (cpLabel) cpLabel.textContent = projName;
-  if (cpGrid) {
-    cpGrid.innerHTML = cps.map(cp => {
-      const esc = s => s.replace(/'/g,"\'");
-      return '<div class="tree-cp-item '+(item?.selectedCP?.id===cp.id?'selected':'')+'"'
-        +' id="tci_'+cp.id.replace(/-/g,'').substring(0,8)+'_'+iid+'"'
-        +' onclick="selectCP(''+itemId+'',''+cp.id+'',''+esc(cp.name)+'',''+projId+'',''+esc(projName)+'',''+planId+'',''+esc(planName)+'')">'+cp.name+'</div>';
+  document.querySelectorAll('#prow_' + iid + ' .proj-chip').forEach(function(el) { el.classList.remove('open'); });
+  var ca = document.getElementById('ca_' + iid);
+  if (isOpen) { if (ca) ca.classList.remove('show'); return; }
+  if (chip) chip.classList.add('open');
+
+  var cps = cache.checkpoints.filter(function(c) {
+    return (c.projectIds || []).some(function(pid) { return stripDash(pid) === stripDash(projId); });
+  });
+
+  var lbl = document.getElementById('clbl_' + iid);
+  var grid = document.getElementById('cg_' + iid);
+  if (lbl) lbl.textContent = projName;
+
+  var item = queue.filter(function(q) { return q.id === itemId; })[0];
+  if (grid) {
+    grid.innerHTML = cps.map(function(cp) {
+      var isSel = item && item.selCP && item.selCP.id === cp.id ? ' sel' : '';
+      var cpShort = stripDash(cp.id).substring(0,8);
+      return '<div class="cp-item' + isSel + '" id="tci_' + cpShort + '_' + iid + '"'
+        + ' onclick="selCP(\'' + itemId + '\',\'' + cp.id + '\',\'' + escQ(cp.name) + '\',\'' + projId + '\',\'' + escQ(projName) + '\',\'' + planId + '\',\'' + escQ(planName) + '\')">'
+        + esc(cp.name) + '</div>';
     }).join('') || '<div style="font-size:12px;color:var(--muted);padding:4px 0">無查核點</div>';
   }
-  cpArea?.classList.add('visible');
-}
-function selectCP(itemId, cpId, cpName, projId, projName, planId, planName) {
-  const item = queue.find(q=>q.id===itemId);
-  if (!item) return;
-  item.selectedCP = { id: cpId, name: cpName };
-  item.selectedProj = { id: projId, name: projName };
-  item.selectedPlan = { id: planId, name: planName };
-  const path = document.getElementById('path_'+itemId);
-  if (path) path.innerHTML = `
-    <span class="path-item">${planName}</span>
-    <span class="path-sep">›</span>
-    <span class="path-item">${projName}</span>
-    <span class="path-sep">›</span>
-    <span class="path-final">${cpName}</span>`;
-  const iid = itemId.replace(/[^a-z0-9]/g,'');
-  document.querySelectorAll('[id^="tci_"][id$="_'+iid+'"]').forEach(el => el.classList.remove('selected'));
-  const tci = document.getElementById('tci_'+cpId.replace(/-/g,'').substring(0,8)+'_'+iid);
-  if (tci) tci.classList.add('selected');
+  if (ca) ca.classList.add('show');
 }
 
-function skipItem(itemId) {
-  const item = queue.find(q=>q.id===itemId);
+// SELECT CHECKPOINT
+function selCP(itemId, cpId, cpName, projId, projName, planId, planName) {
+  var item = queue.filter(function(q) { return q.id === itemId; })[0];
+  if (!item) return;
+  item.selCP = { id: cpId, name: cpName };
+  item.selProj = { id: projId, name: projName };
+  item.selPlan = { id: planId, name: planName };
+
+  var path = document.getElementById('path_' + itemId);
+  if (path) {
+    path.innerHTML = '<span class="pi">' + esc(planName) + '</span><span class="ps">›</span>'
+      + '<span class="pi">' + esc(projName) + '</span><span class="ps">›</span>'
+      + '<span class="pf">' + esc(cpName) + '</span>';
+  }
+
+  var iid = safeId(itemId);
+  var cpShort = stripDash(cpId).substring(0,8);
+  document.querySelectorAll('[id^="tci_"][id$="_' + iid + '"]').forEach(function(el) { el.classList.remove('sel'); });
+  var tci = document.getElementById('tci_' + cpShort + '_' + iid);
+  if (tci) tci.classList.add('sel');
+}
+
+// SUBMIT
+function doSubmit(itemId) {
+  var token = ls('notion_token');
+  if (!token) { alert('請先設定 Notion Token'); return; }
+  var item = queue.filter(function(q) { return q.id === itemId; })[0];
+  if (!item) return;
+
+  var nameEl = document.getElementById('tname_' + itemId);
+  var dateEl = document.getElementById('tdate_' + itemId);
+  var name = nameEl ? nameEl.innerText.trim() : '';
+  var dateRaw = dateEl ? dateEl.value : '';
+
+  var btn = document.getElementById('bsub_' + itemId);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="sp"></span>寫入中...'; }
+
+  var props = {
+    'ToDo': { title: [{ text: { content: name } }] },
+    'AI 審核狀態': { select: { name: '待核實' } },
+    'AI判斷理由': { rich_text: [{ text: { content: (item.result && item.result.reason) || '' } }] }
+  };
+  if (dateRaw) props['DoOn'] = { date: { start: dateRaw } };
+  if (item.selCP && item.selCP.id) props['所屬查核點'] = { relation: [{ id: item.selCP.id }] };
+
+  fetch(PROXY + '/v1/pages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
+    body: JSON.stringify({ parent: { database_id: DBS.todo }, properties: props })
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || '寫入失敗'); });
+    return res.json();
+  })
+  .then(function() {
+    item.status = 'done';
+    renderQueue();
+    var card = document.getElementById('rc_' + itemId);
+    if (card) card.innerHTML = '<div class="smsg ok">✅ 已建立：' + esc(name) + '<br><small style="color:var(--muted)">'
+      + esc((item.selPlan && item.selPlan.name) || '') + ' › '
+      + esc((item.selProj && item.selProj.name) || '') + ' › '
+      + esc((item.selCP && item.selCP.name) || '') + '</small></div>';
+    saveHist({ name: name, doOn: dateRaw, plan: (item.selPlan && item.selPlan.name) || '', project: (item.selProj && item.selProj.name) || '', checkpoint: (item.selCP && item.selCP.name) || '' });
+    // auto next
+    var next = queue.filter(function(q) { return q.status === 'pending' && q.id !== itemId; })[0];
+    if (next) { activeId = next.id; renderQueue(); renderReview(next); }
+  })
+  .catch(function(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '✅ 確認寫入 Notion'; }
+    var st = document.getElementById('subst_' + itemId);
+    if (st) st.innerHTML = '<div class="smsg err" style="margin-top:9px">❌ ' + esc(e.message) + '</div>';
+  });
+}
+
+function doSkip(itemId) {
+  var item = queue.filter(function(q) { return q.id === itemId; })[0];
   if (item) item.status = 'skipped';
   renderQueue();
-  document.getElementById('review-area').innerHTML = '';
-  const next = queue.find(q=>q.status==='pending');
+  document.getElementById('rev-area').innerHTML = '';
+  var next = queue.filter(function(q) { return q.status === 'pending'; })[0];
   if (next) { activeId = next.id; renderQueue(); renderReview(next); }
 }
 
-// ===== NOTION SYNC =====
-async function syncNotion() {
-  const token = localStorage.getItem('notion_token');
+// SYNC
+function doSync() {
+  var token = ls('notion_token');
   if (!token) { alert('請先儲存 Notion Token'); return; }
-  const btn = document.querySelector('.btn-sync');
-  const status = document.getElementById('sync-status');
+  var btn = document.querySelector('.bsync');
+  var st = document.getElementById('syncst');
   btn.textContent = '⏳ 同步中...'; btn.disabled = true;
-  status.textContent = '正在讀取...';
-  try {
-    const [plans, projects, checkpoints] = await Promise.all([
-      queryDB(token, DB_IDS.plan, 'plan'),
-      queryDB(token, DB_IDS.project, 'project'),
-      queryDB(token, DB_IDS.checkpoint, 'checkpoint'),
-    ]);
-    notionCache = { plans, projects, checkpoints, synced: new Date().toLocaleString('zh-TW') };
-    localStorage.setItem('notion_cache', JSON.stringify(notionCache));
-    status.textContent = `✅ 同步完成：${plans.length} 個計劃、${projects.length} 個專案、${checkpoints.length} 個查核點`;
-    updateSyncInfo();
-  } catch(e) {
-    status.textContent = '❌ 同步失敗：' + e.message;
-  } finally {
-    btn.textContent = '🔄 同步 Notion'; btn.disabled = false;
-  }
+  st.textContent = '正在讀取...';
+
+  Promise.all([
+    queryDB(token, DBS.plan, 'plan'),
+    queryDB(token, DBS.project, 'project'),
+    queryDB(token, DBS.checkpoint, 'checkpoint')
+  ])
+  .then(function(results) {
+    cache = { plans: results[0], projects: results[1], checkpoints: results[2], synced: new Date().toLocaleString('zh-TW') };
+    ls('notion_cache', JSON.stringify(cache));
+    st.textContent = '✅ 同步完成：' + results[0].length + ' 個計劃、' + results[1].length + ' 個專案、' + results[2].length + ' 個查核點';
+    showSyncInfo();
+  })
+  .catch(function(e) { st.textContent = '❌ 同步失敗：' + e.message; })
+  .finally(function() { btn.textContent = '🔄 同步 Notion'; btn.disabled = false; });
 }
 
-async function queryDB(token, dbId, type) {
-  const results = []; let cursor = null;
-  do {
-    const body = { page_size: 100 };
+function queryDB(token, dbId, type) {
+  var results = [];
+  function go(cursor) {
+    var body = { page_size: 100 };
     if (cursor) body.start_cursor = cursor;
-    const res = await fetch(`${PROXY}/v1/databases/${dbId}/query`, {
+    return fetch(PROXY + '/v1/databases/' + dbId + '/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body)
+    })
+    .then(function(res) {
+      if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || 'API 錯誤'); });
+      return res.json();
+    })
+    .then(function(data) {
+      data.results.forEach(function(p) {
+        var props = p.properties, name = '';
+        Object.keys(props).forEach(function(k) { if (props[k].type === 'title' && !name) name = props[k].title.map(function(t) { return t.plain_text; }).join(''); });
+        if (!name.trim()) return;
+        var item = { id: p.id, name: name };
+        if (type === 'project') { var r = props['Dt. 計劃'] || props['計劃'] || null; if (r && r.relation) item.planIds = r.relation.map(function(x) { return x.id; }); }
+        if (type === 'checkpoint') { var r2 = props['Dt. 專案X-X'] || props['專案'] || null; if (r2 && r2.relation) item.projectIds = r2.relation.map(function(x) { return x.id; }); }
+        results.push(item);
+      });
+      if (data.has_more && data.next_cursor) return go(data.next_cursor);
     });
-    if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Notion API 錯誤'); }
-    const data = await res.json();
-    results.push(...parseResults(data.results, type));
-    cursor = data.has_more ? data.next_cursor : null;
-  } while (cursor);
-  return results;
+  }
+  return go(null).then(function() { return results; });
 }
 
-function parseResults(pages, type) {
-  return pages.map(p => {
-    const props = p.properties;
-    let name = '';
-    for (const key of Object.keys(props)) {
-      if (props[key].type === 'title') { name = props[key].title.map(t=>t.plain_text).join(''); break; }
-    }
-    const item = { id: p.id, name };
-    if (type === 'project') {
-      const r = props['Dt. 計劃']||props['計劃']||null;
-      if (r?.relation) item.planIds = r.relation.map(x=>x.id);
-    }
-    if (type === 'checkpoint') {
-      const r = props['Dt. 專案X-X']||props['專案']||null;
-      if (r?.relation) item.projectIds = r.relation.map(x=>x.id);
-      const c = props['查核點代號'];
-      if (c?.rich_text) item.code = c.rich_text.map(t=>t.plain_text).join('');
-    }
-    return item;
-  }).filter(i=>i.name.trim());
+function showSyncInfo() {
+  if (!cache) return;
+  document.getElementById('syncinfo').style.display = 'block';
+  document.getElementById('syncinfo-body').innerHTML = '同步時間：' + cache.synced
+    + '<br>計劃：' + cache.plans.length + ' 個'
+    + '<br>專案：' + cache.projects.length + ' 個'
+    + '<br>查核點：' + cache.checkpoints.length + ' 個';
 }
 
-function updateSyncInfo() {
-  if (!notionCache) return;
-  document.getElementById('sync-info-card').style.display = 'block';
-  document.getElementById('sync-info-content').innerHTML =
-    `同步時間：${notionCache.synced}<br>計劃：${notionCache.plans.length} 個<br>專案：${notionCache.projects.length} 個<br>查核點：${notionCache.checkpoints.length} 個`;
-}
-
-// ===== SETTINGS =====
-function loadSettings() {
-  const t = localStorage.getItem('notion_token');
-  const k = localStorage.getItem('claude_key');
-  if (t) document.getElementById('notion-token').value = t;
-  if (k) document.getElementById('claude-key').value = k;
-}
-function saveSettings() {
-  const t = document.getElementById('notion-token').value.trim();
-  const k = document.getElementById('claude-key').value.trim();
+// SETTINGS
+function saveCfg() {
+  var t = document.getElementById('ntoken').value.trim();
+  var k = document.getElementById('ckey').value.trim();
   if (!t || !k) { alert('請填入兩個 Token'); return; }
-  localStorage.setItem('notion_token', t);
-  localStorage.setItem('claude_key', k);
+  ls('notion_token', t); ls('claude_key', k);
   document.getElementById('setup-notice').style.display = 'none';
   alert('✅ 已儲存！請點「同步 Notion」');
 }
 
-// ===== HISTORY =====
-function saveHistory(item) {
-  const h = JSON.parse(localStorage.getItem('capture_history')||'[]');
-  h.unshift({...item, time: new Date().toLocaleString('zh-TW')});
+// HISTORY
+function saveHist(item) {
+  var h = JSON.parse(ls('capture_history') || '[]');
+  h.unshift(Object.assign({}, item, { time: new Date().toLocaleString('zh-TW') }));
   if (h.length > 50) h.pop();
-  localStorage.setItem('capture_history', JSON.stringify(h));
+  ls('capture_history', JSON.stringify(h));
 }
-function loadHistory() {
-  const h = JSON.parse(localStorage.getItem('capture_history')||'[]');
-  const el = document.getElementById('history-list');
+function renderHistory() {
+  var h = JSON.parse(ls('capture_history') || '[]');
+  var el = document.getElementById('hlist');
   if (!el) return;
-  if (h.length === 0) { el.innerHTML = '<div class="empty-state">還沒有記錄</div>'; return; }
-  el.innerHTML = h.map(i=>`
-    <div class="history-item">
-      <div><div class="history-name">${i.name}</div><div class="history-path">${i.plan||''} › ${i.project||''} › ${i.checkpoint||''}</div></div>
-      <div class="history-meta">${i.doOn||''}<br>${i.time}</div>
-    </div>`).join('');
+  if (h.length === 0) { el.innerHTML = '<div class="empty">還沒有記錄</div>'; return; }
+  el.innerHTML = h.map(function(i) {
+    return '<div class="hi">'
+      + '<div><div class="hn">' + esc(i.name) + '</div><div class="hp">' + esc(i.plan || '') + ' › ' + esc(i.project || '') + ' › ' + esc(i.checkpoint || '') + '</div></div>'
+      + '<div class="hm">' + esc(i.doOn || '') + '<br>' + esc(i.time) + '</div>'
+      + '</div>';
+  }).join('');
 }
 </script>
 </body>
