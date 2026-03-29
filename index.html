@@ -315,7 +315,7 @@ async function queryDB(token, dbId, type) {
     if (cursor) body.start_cursor = cursor;
     const res = await fetch(`https://notion-proxy.tca-hsuoo.workers.dev/notion/v1/databases/${dbId}/query`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-notion-token': token },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
       body: JSON.stringify(body),
     });
     if (!res.ok) {
