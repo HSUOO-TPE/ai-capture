@@ -313,7 +313,7 @@ async function queryDB(token, dbId, type) {
   do {
     const body = { page_size: 100 };
     if (cursor) body.start_cursor = cursor;
-    const res = await fetch(`https://api.anthropic.com/v1/proxy/notion/v1/databases/${dbId}/query`, {
+    const res = await fetch(`https://notion-proxy.tca-hsuoo.workers.dev/notion/v1/databases/${dbId}/query`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-notion-token': token },
       body: JSON.stringify(body),
