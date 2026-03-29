@@ -575,10 +575,13 @@ function doSubmit(itemId) {
   var btn = document.getElementById('bsub_' + itemId);
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="sp"></span>寫入中...'; }
 
+  var srcMap = { 'Outlook': 'OUTLOOK', 'Line': 'LINE', '會議': '會議', '其他': '其他' };
+  var srcVal = srcMap[item.source] || '其他';
   var props = {
     'ToDo': { title: [{ text: { content: name } }] },
-    'AI 審核狀態': { select: { name: '待核實' } },
-    'AI判斷理由': { rich_text: [{ text: { content: (item.result && item.result.reason) || '' } }] }
+    'AI 審核狀態': { select: { name: '🟡待核實' } },
+    'AI判斷理由': { rich_text: [{ text: { content: (item.result && item.result.reason) || '' } }] },
+    '來源': { select: { name: srcVal } }
   };
   if (dateRaw) props['DoOn'] = { date: { start: dateRaw } };
   if (item.selCP && item.selCP.id) props['所屬查核點'] = { relation: [{ id: item.selCP.id }] };
