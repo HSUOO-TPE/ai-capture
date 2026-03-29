@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Capture → Notion</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --border: #e0ddd6;
+    --text: #1a1a1a;
+    --muted: #6b6860;
+    --accent: #e8571a;
+    --accent-hover: #c94a14;
+    --teal: #0f6e56;
+    --amber: #ba7517;
+    --purple: #534ab7;
+    --success: #1d9e75;
+    --tag-bg: #f0ede6;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: -0.3px; }
+  .header-actions { display: flex; gap: 8px; }
+  .btn-icon { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* MAIN */
+  .main { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  /* CARD */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+  /* INPUT AREA */
+  .input-area { width: 100%; min-height: 120px; border: 1.5px solid var(--border); border-radius: 10px; padding: 14px; font-size: 15px; font-family: inherit; color: var(--text); background: var(--bg); resize: vertical; outline: none; line-height: 1.6; }
+  .input-area:focus { border-color: var(--accent); background: #fff; }
+  .input-area::placeholder { color: #aaa; }
+  .input-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .char-hint { font-size: 12px; color: var(--muted); }
+  .btn-analyze { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-analyze:hover { background: var(--accent-hover); }
+  .btn-analyze:disabled { background: #ccc; cursor: not-allowed; }
+
+  /* SOURCE TAGS */
+  .source-tags { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tag { border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 13px; color: var(--muted); cursor: pointer; background: var(--card); transition: all 0.1s; }
+  .tag.active { border-color: var(--accent); color: var(--accent); background: #fdf2ec; font-weight: 600; }
+
+  /* RESULT */
+  .result-card { background: var(--card); border: 1.5px solid var(--success); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .result-label { font-size: 13px; font-weight: 600; color: var(--success); }
+  .confidence { font-size: 12px; color: var(--muted); background: var(--tag-bg); padding: 3px 10px; border-radius: 20px; }
+
+  /* FIELDS */
+  .field { margin-bottom: 14px; }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .field-value { font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; line-height: 1.5; }
+  .field-value.editable { cursor: text; }
+  .field-value.editable:focus { outline: none; border-color: var(--accent); background: #fff; }
+  .field input, .field select { width: 100%; font-size: 14px; font-family: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; outline: none; }
+  .field input:focus, .field select:focus { border-color: var(--accent); background: #fff; }
+  .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  /* PATH DISPLAY */
+  .path-display { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 14px; background: var(--tag-bg); border-radius: 8px; }
+  .path-item { font-size: 13px; font-weight: 500; color: var(--text); }
+  .path-sep { font-size: 13px; color: var(--muted); }
+  .path-final { font-size: 13px; font-weight: 600; color: var(--accent); }
+
+  /* REASON */
+  .reason-box { background: #f9f8f5; border-left: 3px solid var(--amber); border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ALTERNATIVES */
+  .alt-section { margin-bottom: 16px; }
+  .alt-title { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+  .alt-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all 0.1s; }
+  .alt-item:hover { border-color: var(--accent); color: var(--accent); background: #fdf2ec; }
+
+  /* ACTIONS */
+  .actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn-submit { flex: 1; background: var(--success); color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-submit:hover { background: #0a8a63; }
+  .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-cancel { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .btn-cancel:hover { border-color: #aaa; }
+
+  /* STATUS */
+  .status-msg { text-align: center; padding: 16px; font-size: 14px; border-radius: 10px; margin-bottom: 16px; }
+  .status-msg.success { background: #e6f7f1; color: var(--success); border: 1px solid #9fe1cb; }
+  .status-msg.error { background: #fce8e8; color: #a32d2d; border: 1px solid #f09595; }
+  .status-msg.loading { background: #f0ede6; color: var(--muted); }
+
+  /* HISTORY */
+  .history-item { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .history-item:last-child { border-bottom: none; }
+  .history-text { font-size: 14px; color: var(--text); flex: 1; }
+  .history-meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .history-path { font-size: 12px; color: var(--accent); margin-top: 2px; }
+
+  /* SETTINGS */
+  .settings-panel { display: none; }
+  .settings-panel.open { display: block; }
+  .settings-field { margin-bottom: 16px; }
+  .settings-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .settings-hint { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
+  .settings-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: monospace; color: var(--text); background: var(--bg); outline: none; }
+  .settings-input:focus { border-color: var(--accent); background: #fff; }
+  .btn-save { background: var(--purple); color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-save:hover { background: #3c3489; }
+  .btn-sync { background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .btn-sync:hover { background: #085041; }
+
+  /* LOADING SPINNER */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  /* SETUP NOTICE */
+  .setup-notice { background: #fdf2ec; border: 1.5px solid var(--accent); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
+  .setup-title { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .setup-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .setup-steps { margin-top: 10px; padding-left: 16px; }
+  .setup-steps li { font-size: 13px; color: var(--muted); margin-bottom: 4px; line-height: 1.5; }
+
+  @media (max-width: 480px) {
+    .main { padding: 14px 12px 80px; }
+    .card { padding: 16px; }
+    .actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">⚡ AI Capture</div>
+  <div class="header-actions">
+    <button class="btn-icon" onclick="toggleView('history')">記錄</button>
+    <button class="btn-icon" onclick="toggleView('settings')">設定</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SETUP NOTICE -->
+  <div class="setup-notice" id="setup-notice" style="display:none">
+    <div class="setup-title">⚙️ 請先完成設定</div>
+    <div class="setup-text">第一次使用需要輸入你的 Notion API Token：</div>
+    <ol class="setup-steps">
+      <li>點右上角「設定」</li>
+      <li>貼入你的 ANTIGRAVITY Integration Token</li>
+      <li>點「儲存並同步」</li>
+    </ol>
+  </div>
+
+  <!-- MAIN VIEW -->
+  <div id="view-main">
+
+    <div class="card">
+      <div class="card-title">來源</div>
+      <div class="source-tags">
+        <div class="tag active" onclick="selectSource(this, 'Outlook')">📧 Outlook</div>
+        <div class="tag" onclick="selectSource(this, 'Line')">💬 Line</div>
+        <div class="tag" onclick="selectSource(this, '會議')">🗓 會議</div>
+        <div class="tag" onclick="selectSource(this, '其他')">✏️ 其他</div>
+      </div>
+      <textarea class="input-area" id="input-text" placeholder="把 Outlook 信件內容、Line 訊息、會議記錄貼在這裡...&#10;&#10;例如：「下週三王董事長要看Q2業績簡報，需要準備財務數據與市場分析」" oninput="updateCharCount()"></textarea>
+      <div class="input-footer">
+        <span class="char-hint" id="char-count">0 字</span>
+        <button class="btn-analyze" id="btn-analyze" onclick="analyze()">🔍 AI 分析</button>
+      </div>
+    </div>
+
+    <div id="result-area"></div>
+    <div id="status-area"></div>
+
+  </div>
+
+  <!-- HISTORY VIEW -->
+  <div id="view-history" style="display:none">
+    <div class="card">
+      <div class="card-title">最近建立記錄</div>
+      <div id="history-list">
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-text">還沒有建立過任何待辦事項</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div id="view-settings" style="display:none">
+    <div class="card">
+      <div class="card-title">設定</div>
+
+      <div class="settings-field">
+        <div class="settings-label">Notion API Token</div>
+        <div class="settings-hint">你的 ANTIGRAVITY Integration Token（secret_... 開頭）。儲存後不會顯示完整內容，只存在這個瀏覽器本地。</div>
+        <input class="settings-input" type="password" id="notion-token" placeholder="secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+
+      <div class="settings-field">
+        <div class="settings-label">Claude API Key</div>
+        <div class="settings-hint">你的 Anthropic API Key（sk-ant-... 開頭）。請至 console.anthropic.com 取得。</div>
+        <input class="settings-input" type="password" id="claude-key" placeholder="sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+
+      <button class="btn-save" onclick="saveSettings()">💾 儲存設定</button>
+      <button class="btn-sync" onclick="syncNotion()">🔄 同步 Notion 資料庫</button>
+      <div id="sync-status" style="margin-top:10px; font-size:13px; color:var(--muted)"></div>
+    </div>
+
+    <div class="card" id="sync-info-card" style="display:none">
+      <div class="card-title">已同步資料</div>
+      <div id="sync-info-content" style="font-size:13px; color:var(--muted); line-height:1.8"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== CONFIG ====================
+const DB_IDS = {
+  plan:       '2039cedd371d80cebb3fc6725bfc2034',
+  planItem:   '2039cedd371d800d8283d0b02ecd6e0c',
+  project:    '2039cedd371d80a5a71ee547109ac84a',
+  projItem:   '2039cedd371d80ee8afcdb809f83a294',
+  checkpoint: '2039cedd371d806ea9d6c5883f61f91b',
+  todo:       '2039cedd371d809da256ebded43e57ad',
+};
+
+// ==================== STATE ====================
+let currentSource = 'Outlook';
+let currentResult = null;
+let notionCache = null;
+
+// ==================== INIT ====================
+window.onload = () => {
+  loadSettings();
+  loadHistory();
+  const token = localStorage.getItem('notion_token');
+  const key = localStorage.getItem('claude_key');
+  if (!token || !key) {
+    document.getElementById('setup-notice').style.display = 'block';
+  }
+  const cached = localStorage.getItem('notion_cache');
+  if (cached) {
+    notionCache = JSON.parse(cached);
+    updateSyncInfo();
+  }
+};
+
+// ==================== SETTINGS ====================
+function loadSettings() {
+  const t = localStorage.getItem('notion_token');
+  const k = localStorage.getItem('claude_key');
+  if (t) document.getElementById('notion-token').value = t;
+  if (k) document.getElementById('claude-key').value = k;
+}
+
+function saveSettings() {
+  const t = document.getElementById('notion-token').value.trim();
+  const k = document.getElementById('claude-key').value.trim();
+  if (!t || !k) { alert('請填入兩個 Token'); return; }
+  localStorage.setItem('notion_token', t);
+  localStorage.setItem('claude_key', k);
+  document.getElementById('setup-notice').style.display = 'none';
+  alert('✅ 設定已儲存！請點「同步 Notion 資料庫」');
+}
+
+// ==================== NOTION SYNC ====================
+async function syncNotion() {
+  const token = localStorage.getItem('notion_token');
+  if (!token) { alert('請先儲存 Notion Token'); return; }
+  const btn = document.querySelector('.btn-sync');
+  const status = document.getElementById('sync-status');
+  btn.textContent = '⏳ 同步中...';
+  btn.disabled = true;
+  status.textContent = '正在讀取計劃...';
+
+  try {
+    const [plans, projects, checkpoints] = await Promise.all([
+      queryDB(token, DB_IDS.plan, 'plan'),
+      queryDB(token, DB_IDS.project, 'project'),
+      queryDB(token, DB_IDS.checkpoint, 'checkpoint'),
+    ]);
+
+    notionCache = { plans, projects, checkpoints, synced: new Date().toLocaleString('zh-TW') };
+    localStorage.setItem('notion_cache', JSON.stringify(notionCache));
+    status.textContent = `✅ 同步完成：${plans.length} 個計劃、${projects.length} 個專案、${checkpoints.length} 個查核點`;
+    updateSyncInfo();
+  } catch(e) {
+    status.textContent = '❌ 同步失敗：' + e.message;
+  } finally {
+    btn.textContent = '🔄 同步 Notion 資料庫';
+    btn.disabled = false;
+  }
+}
+
+async function queryDB(token, dbId, type) {
+  const results = [];
+  let cursor = null;
+  do {
+    const body = { page_size: 100 };
+    if (cursor) body.start_cursor = cursor;
+    const res = await fetch(`https://api.anthropic.com/v1/proxy/notion/v1/databases/${dbId}/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-notion-token': token },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      // 直接打 Notion API
+      const r2 = await notionQuery(token, dbId, body);
+      results.push(...parseResults(r2.results, type));
+      cursor = r2.has_more ? r2.next_cursor : null;
+      continue;
+    }
+    const data = await res.json();
+    results.push(...parseResults(data.results, type));
+    cursor = data.has_more ? data.next_cursor : null;
+  } while (cursor);
+  return results;
+}
+
+async function notionQuery(token, dbId, body) {
+  const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      'Notion-Version': '2022-06-28',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Notion API 錯誤');
+  }
+  return res.json();
+}
+
+function parseResults(pages, type) {
+  return pages.map(p => {
+    const props = p.properties;
+    let name = '';
+    // 找 title 欄位
+    for (const key of Object.keys(props)) {
+      if (props[key].type === 'title') {
+        name = props[key].title.map(t => t.plain_text).join('');
+        break;
+      }
+    }
+    const item = { id: p.id, name };
+    if (type === 'project') {
+      // 取得所屬計劃
+      const planRel = props['Dt. 計劃'] || props['計劃'] || null;
+      if (planRel && planRel.relation) {
+        item.planIds = planRel.relation.map(r => r.id);
+      }
+    }
+    if (type === 'checkpoint') {
+      const projRel = props['Dt. 專案X-X'] || props['專案'] || null;
+      if (projRel && projRel.relation) {
+        item.projectIds = projRel.relation.map(r => r.id);
+      }
+      const planRel = props['Dt. 計劃'] || null;
+      if (planRel && planRel.relation) {
+        item.planIds = planRel.relation.map(r => r.id);
+      }
+      // 查核點代號
+      const codeP = props['查核點代號'];
+      if (codeP && codeP.rich_text) {
+        item.code = codeP.rich_text.map(t => t.plain_text).join('');
+      }
+    }
+    return item;
+  }).filter(i => i.name.trim());
+}
+
+function updateSyncInfo() {
+  if (!notionCache) return;
+  const card = document.getElementById('sync-info-card');
+  const content = document.getElementById('sync-info-content');
+  card.style.display = 'block';
+  content.innerHTML = `
+    同步時間：${notionCache.synced}<br>
+    計劃：${notionCache.plans.length} 個<br>
+    專案：${notionCache.projects.length} 個<br>
+    查核點：${notionCache.checkpoints.length} 個
+  `;
+}
+
+// ==================== VIEWS ====================
+function toggleView(view) {
+  ['main','history','settings'].forEach(v => {
+    document.getElementById('view-'+v).style.display = v === view || (view === 'main') ? (v === view ? 'block' : 'none') : 'none';
+  });
+  if (view === 'main') {
+    document.getElementById('view-main').style.display = 'block';
+  }
+  if (view === 'history') loadHistory();
+}
+
+function selectSource(el, src) {
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentSource = src;
+}
+
+function updateCharCount() {
+  const len = document.getElementById('input-text').value.length;
+  document.getElementById('char-count').textContent = len + ' 字';
+}
+
+// ==================== ANALYZE ====================
+async function analyze() {
+  const text = document.getElementById('input-text').value.trim();
+  if (!text) { alert('請先輸入內容'); return; }
+
+  const claudeKey = localStorage.getItem('claude_key');
+  if (!claudeKey) { alert('請先在設定中輸入 Claude API Key'); return; }
+
+  if (!notionCache) {
+    showStatus('⚠️ 尚未同步 Notion 資料，請先到「設定」點「同步 Notion 資料庫」', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>分析中...';
+  document.getElementById('result-area').innerHTML = '';
+  document.getElementById('status-area').innerHTML = '';
+
+  try {
+    const context = buildContext();
+    const prompt = buildPrompt(text, context);
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': claudeKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!res.ok) {
+      const e = await res.json();
+      throw new Error(e.error?.message || 'Claude API 錯誤');
+    }
+
+    const data = await res.json();
+    const raw = data.content[0].text;
+    const clean = raw.replace(/```json|```/g, '').trim();
+    currentResult = JSON.parse(clean);
+    renderResult(currentResult);
+  } catch(e) {
+    showStatus('❌ 分析失敗：' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 AI 分析';
+  }
+}
+
+function buildContext() {
+  const plans = notionCache.plans.map(p => ({ id: p.id, name: p.name }));
+  const projects = notionCache.projects.map(p => ({
+    id: p.id, name: p.name,
+    planIds: p.planIds || []
+  }));
+  const checkpoints = notionCache.checkpoints.map(c => ({
+    id: c.id, name: c.name, code: c.code || '',
+    projectIds: c.projectIds || [],
+    planIds: c.planIds || []
+  }));
+  return { plans, projects, checkpoints };
+}
+
+function buildPrompt(text, ctx) {
+  return `你是一個 Notion 待辦事項建立助手。根據使用者輸入的內容，判斷應該建立哪些待辦事項，並對應到正確的計劃、專案與查核點。
+
+## 使用者的 Notion 結構（JSON）
+計劃：${JSON.stringify(ctx.plans.map(p=>({id:p.id,name:p.name})))}
+
+專案（含所屬計劃ID）：${JSON.stringify(ctx.projects)}
+
+查核點（含所屬專案ID）：${JSON.stringify(ctx.checkpoints.map(c=>({id:c.id,name:c.name,code:c.code,projectIds:c.projectIds})))}
+
+## 使用者輸入
+來源：${currentSource}
+內容：${text}
+
+## 任務
+1. 從內容中拆解出 1-5 個待辦事項
+2. 每個待辦事項找到最符合的查核點（從上方清單中選）
+3. 若有多個可能，列出最多 3 個備選
+4. 判斷是否有截止日期
+
+## 回傳格式（純 JSON，不要其他文字）
+{
+  "todos": [
+    {
+      "name": "待辦事項名稱",
+      "doOn": "YYYY/MM/DD 或 null",
+      "checkpoint": { "id": "notion_page_id", "name": "查核點名稱" },
+      "project": { "id": "notion_page_id", "name": "專案名稱" },
+      "plan": { "id": "notion_page_id", "name": "計劃名稱" },
+      "reason": "判斷理由（30字以內）",
+      "confidence": "high/medium/low",
+      "alternatives": [
+        { "checkpoint": { "id": "...", "name": "..." }, "project": { "id": "...", "name": "..." }, "plan": { "id": "...", "name": "..." } }
+      ]
+    }
+  ]
+}`;
+}
+
+// ==================== RENDER RESULT ====================
+function renderResult(result) {
+  const area = document.getElementById('result-area');
+  if (!result.todos || result.todos.length === 0) {
+    area.innerHTML = '<div class="status-msg error">無法判斷待辦事項，請提供更多資訊</div>';
+    return;
+  }
+
+  area.innerHTML = result.todos.map((todo, i) => renderTodoCard(todo, i)).join('');
+}
+
+function renderTodoCard(todo, idx) {
+  const confColor = todo.confidence === 'high' ? '#1d9e75' : todo.confidence === 'medium' ? '#ba7517' : '#a32d2d';
+  const confText = todo.confidence === 'high' ? '高信心' : todo.confidence === 'medium' ? '中信心' : '低信心';
+
+  const alts = (todo.alternatives || []).map(a => `
+    <div class="alt-item" onclick="swapAlt(${idx}, ${JSON.stringify(a).replace(/"/g,'&quot;')})">
+      ${a.plan?.name || ''} → ${a.project?.name || ''} → ${a.checkpoint?.name || ''}
+    </div>
+  `).join('');
+
+  return `
+    <div class="result-card" id="todo-card-${idx}">
+      <div class="result-header">
+        <div class="result-label">📌 待辦 ${idx+1}</div>
+        <div class="confidence" style="color:${confColor}">${confText}</div>
+      </div>
+
+      <div class="path-display" id="path-${idx}">
+        <span class="path-item">${todo.plan?.name || '未知計劃'}</span>
+        <span class="path-sep">›</span>
+        <span class="path-item">${todo.project?.name || '未知專案'}</span>
+        <span class="path-sep">›</span>
+        <span class="path-final">${todo.checkpoint?.name || '未指定查核點'}</span>
+      </div>
+
+      <div class="reason-box">${todo.reason || ''}</div>
+
+      <div class="field">
+        <div class="field-label">待辦名稱</div>
+        <div class="field-value editable" id="todo-name-${idx}" contenteditable="true">${todo.name}</div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">截止日期</div>
+        <input type="date" id="todo-date-${idx}" value="${todo.doOn ? todo.doOn.replace(/\//g,'-') : ''}">
+      </div>
+
+      ${alts ? `<div class="alt-section"><div class="alt-title">⬇ 其他可能的對應（點擊切換）</div>${alts}</div>` : ''}
+
+      <div class="actions">
+        <button class="btn-submit" onclick="submitTodo(${idx})">✅ 確認寫入 Notion</button>
+        <button class="btn-cancel" onclick="dismissTodo(${idx})">略過</button>
+      </div>
+    </div>
+  `;
+}
+
+function swapAlt(idx, alt) {
+  if (!currentResult || !currentResult.todos[idx]) return;
+  const todo = currentResult.todos[idx];
+  todo.checkpoint = alt.checkpoint;
+  todo.project = alt.project;
+  todo.plan = alt.plan;
+  const path = document.getElementById('path-'+idx);
+  if (path) {
+    path.innerHTML = `
+      <span class="path-item">${alt.plan?.name||''}</span>
+      <span class="path-sep">›</span>
+      <span class="path-item">${alt.project?.name||''}</span>
+      <span class="path-sep">›</span>
+      <span class="path-final">${alt.checkpoint?.name||''}</span>
+    `;
+  }
+}
+
+function dismissTodo(idx) {
+  document.getElementById('todo-card-'+idx)?.remove();
+}
+
+// ==================== SUBMIT ====================
+async function submitTodo(idx) {
+  const token = localStorage.getItem('notion_token');
+  if (!token) { alert('請先設定 Notion Token'); return; }
+
+  const todo = currentResult.todos[idx];
+  const name = document.getElementById('todo-name-'+idx)?.innerText.trim();
+  const dateRaw = document.getElementById('todo-date-'+idx)?.value;
+  const doOn = dateRaw ? dateRaw.replace(/-/g,'/') : null;
+
+  const btn = document.querySelector(`#todo-card-${idx} .btn-submit`);
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>寫入中...';
+
+  try {
+    const properties = {
+      'ToDo': { title: [{ text: { content: name } }] },
+      'AI審核狀態': { status: { name: '待核實' } },
+      'AI判斷理由': { rich_text: [{ text: { content: todo.reason || '' } }] },
+    };
+
+    if (doOn) {
+      properties['DoOn'] = { date: { start: dateRaw } };
+    }
+
+    if (todo.checkpoint?.id) {
+      properties['所屬查核點'] = { relation: [{ id: todo.checkpoint.id }] };
+    }
+
+    const body = {
+      parent: { database_id: DB_IDS.todo },
+      properties,
+    };
+
+    const res = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'Notion-Version': '2022-06-28',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const e = await res.json();
+      throw new Error(e.message || 'Notion 寫入失敗');
+    }
+
+    // 成功
+    saveHistory({ name, doOn, plan: todo.plan?.name, project: todo.project?.name, checkpoint: todo.checkpoint?.name });
+    document.getElementById('todo-card-'+idx).innerHTML = `
+      <div class="status-msg success">✅ 已建立：${name}<br><small>${todo.plan?.name} › ${todo.project?.name} › ${todo.checkpoint?.name}</small></div>
+    `;
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ 確認寫入 Notion';
+    showStatus('❌ 寫入失敗：' + e.message, 'error');
+  }
+}
+
+// ==================== HISTORY ====================
+function saveHistory(item) {
+  const history = JSON.parse(localStorage.getItem('capture_history') || '[]');
+  history.unshift({ ...item, time: new Date().toLocaleString('zh-TW') });
+  if (history.length > 30) history.pop();
+  localStorage.setItem('capture_history', JSON.stringify(history));
+}
+
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem('capture_history') || '[]');
+  const el = document.getElementById('history-list');
+  if (!el) return;
+  if (history.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">還沒有建立過任何待辦事項</div></div>';
+    return;
+  }
+  el.innerHTML = history.map(h => `
+    <div class="history-item">
+      <div>
+        <div class="history-text">${h.name}</div>
+        <div class="history-path">${h.plan||''} › ${h.project||''} › ${h.checkpoint||''}</div>
+      </div>
+      <div class="history-meta">${h.doOn||''}<br>${h.time}</div>
+    </div>
+  `).join('');
+}
+
+function showStatus(msg, type) {
+  document.getElementById('status-area').innerHTML = `<div class="status-msg ${type}">${msg}</div>`;
+}
+</script>
+</body>
+</html>
