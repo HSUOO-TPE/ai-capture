@@ -85,22 +85,32 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 /* TREE SELECTOR */
 .tree-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--accent); margin-bottom: 10px; user-select: none; }
 .tree-toggle:hover { text-decoration: underline; }
-.tree-panel { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; max-height: 360px; overflow-y: auto; }
-.tree-plan { border-bottom: 1px solid var(--border); }
-.tree-plan:last-child { border-bottom: none; }
-.tree-plan-header { display: flex; align-items: center; gap: 8px; padding: 9px 14px; cursor: pointer; background: var(--tag-bg); font-size: 13px; font-weight: 600; color: var(--text); user-select: none; }
-.tree-plan-header:hover { background: #e8e5de; }
-.tree-chevron { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
-.tree-chevron.open { transform: rotate(90deg); }
-.tree-projects { display: none; }
-.tree-projects.open { display: block; }
-.tree-project-header { display: flex; align-items: center; gap: 6px; padding: 7px 14px 7px 28px; cursor: pointer; background: #faf9f6; font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--border); user-select: none; }
-.tree-project-header:hover { background: #f0ede6; }
-.tree-checkpoints { display: none; }
-.tree-checkpoints.open { display: block; }
-.tree-cp-item { padding: 6px 14px 6px 44px; font-size: 13px; color: var(--text); cursor: pointer; border-top: 1px solid #f0ede6; }
-.tree-cp-item:hover { background: #fdf2ec; color: var(--accent); }
-.tree-cp-item.selected { background: #fdf2ec; color: var(--accent); font-weight: 600; }
+.tree-panel { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+
+/* Layer 1: Plans - horizontal pill tags */
+.tree-plans-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; background: var(--tag-bg); border-bottom: 1px solid var(--border); }
+.tree-plan-pill { border: 1.5px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; background: var(--card); transition: all 0.1s; white-space: nowrap; }
+.tree-plan-pill:hover { border-color: var(--accent); color: var(--accent); }
+.tree-plan-pill.selected { border-color: var(--accent); color: var(--accent); background: #fdf2ec; }
+
+/* Layer 2: Projects - horizontal chips, toggleable */
+.tree-projects-area { padding: 10px 12px; background: #faf9f6; border-bottom: 1px solid var(--border); display: none; }
+.tree-projects-area.visible { display: block; }
+.tree-projects-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tree-proj-chip { border: 1px solid var(--border); border-radius: 8px; padding: 5px 11px; font-size: 12px; color: var(--muted); cursor: pointer; background: var(--card); display: flex; align-items: center; gap: 5px; transition: all 0.1s; }
+.tree-proj-chip:hover { border-color: var(--accent); color: var(--text); }
+.tree-proj-chip.open { border-color: var(--accent); color: var(--accent); background: #fdf2ec; font-weight: 600; }
+.tree-proj-chip .chip-arrow { font-size: 9px; transition: transform 0.15s; }
+.tree-proj-chip.open .chip-arrow { transform: rotate(90deg); }
+
+/* Layer 3: Checkpoints - grid under selected project */
+.tree-cp-area { padding: 0 12px 10px; display: none; }
+.tree-cp-area.visible { display: block; }
+.tree-cp-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin: 8px 0 6px; }
+.tree-cp-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+.tree-cp-item { border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text); cursor: pointer; background: var(--card); transition: all 0.1s; }
+.tree-cp-item:hover { border-color: var(--accent); color: var(--accent); background: #fdf2ec; }
+.tree-cp-item.selected { border-color: var(--accent); color: var(--accent); background: #fdf2ec; font-weight: 600; }
 
 /* ACTIONS */
 .actions { display: flex; gap: 10px; margin-top: 16px; }
@@ -475,70 +485,80 @@ function renderReview(item) {
 // ===== TREE =====
 function buildTree(item) {
   if (!notionCache) return '<div style="padding:12px;font-size:13px;color:var(--muted)">尚未同步資料</div>';
-  const { plans, projects, checkpoints } = notionCache;
+  const iid = item.id.replace(/[^a-z0-9]/g,'');
 
-  // 建立 plan → projects → checkpoints 對應
-  return `<div class="tree-panel">${plans.map(plan => {
-    const planProjects = projects.filter(p => (p.planIds||[]).some(pid => pid.replace(/-/g,'') === plan.id.replace(/-/g,'')));
-    if (planProjects.length === 0) return '';
-    const planId = 'tp_' + plan.id.replace(/-/g,'').substring(0,8) + '_' + item.id.replace(/[^a-z0-9]/g,'');
-    return `<div class="tree-plan">
-      <div class="tree-plan-header" onclick="togglePlan('${planId}')">
-        <span class="tree-chevron" id="chev_${planId}">▶</span>
-        ${plan.name}
-      </div>
-      <div class="tree-projects" id="${planId}">
-        ${planProjects.map(proj => {
-          const projCPs = checkpoints.filter(c => (c.projectIds||[]).some(pid => pid.replace(/-/g,'') === proj.id.replace(/-/g,'')));
-          const projId = 'tpr_' + proj.id.replace(/-/g,'').substring(0,8) + '_' + item.id.replace(/[^a-z0-9]/g,'');
-          return `<div>
-            <div class="tree-project-header" onclick="toggleProject('${projId}')">
-              <span style="font-size:10px;color:var(--muted)" id="pchev_${projId}">▶</span>
-              ${proj.name}
-            </div>
-            <div class="tree-checkpoints" id="${projId}">
-              ${projCPs.length > 0 ? projCPs.map(cp => `
-                <div class="tree-cp-item ${item.selectedCP?.id===cp.id?'selected':''}"
-                  id="tci_${cp.id.replace(/-/g,'').substring(0,8)}_${item.id.replace(/[^a-z0-9]/g,'')}"
-                  onclick="selectCP('${item.id}','${cp.id}','${cp.name.replace(/'/g,"\\'")}','${proj.id}','${proj.name.replace(/'/g,"\\'")}','${plan.id}','${plan.name.replace(/'/g,"\\'")}')">
-                  ${cp.name}
-                </div>`).join('') : '<div style="padding:6px 14px 6px 44px;font-size:12px;color:var(--muted)">無查核點</div>'}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+  const sortedPlans = [...notionCache.plans].sort((a,b) => {
+    const rank = n => n.includes('115')?0 : n.includes('114')?2 : 1;
+    return rank(a.name) - rank(b.name);
+  }).filter(plan => notionCache.projects.some(p => (p.planIds||[]).some(pid => pid.replace(/-/g,'') === plan.id.replace(/-/g,''))));
+
+  const pillsHtml = sortedPlans.map(plan => {
+    const pid = 'pp_' + plan.id.replace(/-/g,'').substring(0,8) + '_' + iid;
+    return `<div class="tree-plan-pill" id="${pid}" onclick="selectPlan('${item.id}','${plan.id}','${plan.name.replace(/'/g,"\'")}','${pid}')">${plan.name}</div>`;
+  }).join('');
+
+  return `<div class="tree-panel">
+    <div class="tree-plans-row" id="plans_row_${iid}">${pillsHtml}</div>
+    <div class="tree-projects-area" id="projs_area_${iid}">
+      <div class="tree-projects-row" id="projs_row_${iid}"></div>
+    </div>
+    <div class="tree-cp-area" id="cp_area_${iid}">
+      <div class="tree-cp-label" id="cp_label_${iid}"></div>
+      <div class="tree-cp-grid" id="cp_grid_${iid}"></div>
+    </div>
+  </div>`;
+}
+function selectPlan(itemId, planId, planName, pillId) {
+  const iid = itemId.replace(/[^a-z0-9]/g,'');
+  document.querySelectorAll('#plans_row_'+iid+' .tree-plan-pill').forEach(el => el.classList.remove('selected'));
+  document.getElementById(pillId)?.classList.add('selected');
+
+  const projs = notionCache.projects.filter(p => (p.planIds||[]).some(pid => pid.replace(/-/g,'') === planId.replace(/-/g,'')));
+  const projsRow = document.getElementById('projs_row_'+iid);
+  const cpArea = document.getElementById('cp_area_'+iid);
+  if (cpArea) { cpArea.classList.remove('visible'); document.getElementById('cp_grid_'+iid).innerHTML = ''; }
+
+  if (projsRow) {
+    projsRow.innerHTML = projs.map(proj => {
+      const chipId = 'chip_' + proj.id.replace(/-/g,'').substring(0,8) + '_' + iid;
+      const esc = s => s.replace(/'/g,"\'");
+      return '<div class="tree-proj-chip" id="'+chipId+'" onclick="selectProject(''+itemId+'',''+proj.id+'',''+esc(proj.name)+'',''+planId+'',''+esc(planName)+'',''+chipId+'')">'
+        +'<span class="chip-arrow">▶</span>'+proj.name+'</div>';
+    }).join('') || '<div style="font-size:12px;color:var(--muted)">無專案</div>';
+  }
+  document.getElementById('projs_area_'+iid)?.classList.add('visible');
 }
 
-function toggleTree(itemId) {
-  const el = document.getElementById('tree_'+itemId);
-  const icon = document.getElementById('tree-toggle-icon_'+itemId);
-  if (el.style.display === 'none') { el.style.display = 'block'; icon.textContent = '▼'; }
-  else { el.style.display = 'none'; icon.textContent = '▶'; }
-}
+function selectProject(itemId, projId, projName, planId, planName, chipId) {
+  const iid = itemId.replace(/[^a-z0-9]/g,'');
+  const chip = document.getElementById(chipId);
+  const isOpen = chip?.classList.contains('open');
+  document.querySelectorAll('#projs_row_'+iid+' .tree-proj-chip').forEach(el => el.classList.remove('open'));
+  const cpArea = document.getElementById('cp_area_'+iid);
+  const cpGrid = document.getElementById('cp_grid_'+iid);
+  const cpLabel = document.getElementById('cp_label_'+iid);
+  if (isOpen) { cpArea?.classList.remove('visible'); return; }
+  chip?.classList.add('open');
 
-function togglePlan(planId) {
-  const el = document.getElementById(planId);
-  const chev = document.getElementById('chev_'+planId);
-  if (el.classList.contains('open')) { el.classList.remove('open'); chev.classList.remove('open'); }
-  else { el.classList.add('open'); chev.classList.add('open'); }
+  const cps = notionCache.checkpoints.filter(c => (c.projectIds||[]).some(pid => pid.replace(/-/g,'') === projId.replace(/-/g,'')));
+  const item = queue.find(q=>q.id===itemId);
+  if (cpLabel) cpLabel.textContent = projName;
+  if (cpGrid) {
+    cpGrid.innerHTML = cps.map(cp => {
+      const esc = s => s.replace(/'/g,"\'");
+      return '<div class="tree-cp-item '+(item?.selectedCP?.id===cp.id?'selected':'')+'"'
+        +' id="tci_'+cp.id.replace(/-/g,'').substring(0,8)+'_'+iid+'"'
+        +' onclick="selectCP(''+itemId+'',''+cp.id+'',''+esc(cp.name)+'',''+projId+'',''+esc(projName)+'',''+planId+'',''+esc(planName)+'')">'+cp.name+'</div>';
+    }).join('') || '<div style="font-size:12px;color:var(--muted);padding:4px 0">無查核點</div>';
+  }
+  cpArea?.classList.add('visible');
 }
-
-function toggleProject(projId) {
-  const el = document.getElementById(projId);
-  const chev = document.getElementById('pchev_'+projId);
-  if (el.classList.contains('open')) { el.classList.remove('open'); chev.style.transform='rotate(0deg)'; }
-  else { el.classList.add('open'); chev.style.transform='rotate(90deg)'; }
-}
-
 function selectCP(itemId, cpId, cpName, projId, projName, planId, planName) {
   const item = queue.find(q=>q.id===itemId);
   if (!item) return;
   item.selectedCP = { id: cpId, name: cpName };
   item.selectedProj = { id: projId, name: projName };
   item.selectedPlan = { id: planId, name: planName };
-  // Update path display
   const path = document.getElementById('path_'+itemId);
   if (path) path.innerHTML = `
     <span class="path-item">${planName}</span>
@@ -546,55 +566,10 @@ function selectCP(itemId, cpId, cpName, projId, projName, planId, planName) {
     <span class="path-item">${projName}</span>
     <span class="path-sep">›</span>
     <span class="path-final">${cpName}</span>`;
-  // Update selected highlight
-  document.querySelectorAll(`[id^="tci_"][id$="_${itemId.replace(/[^a-z0-9]/g,'')}"]`).forEach(el => el.classList.remove('selected'));
-  const tci = document.getElementById(`tci_${cpId.replace(/-/g,'').substring(0,8)}_${itemId.replace(/[^a-z0-9]/g,'')}`);
+  const iid = itemId.replace(/[^a-z0-9]/g,'');
+  document.querySelectorAll('[id^="tci_"][id$="_'+iid+'"]').forEach(el => el.classList.remove('selected'));
+  const tci = document.getElementById('tci_'+cpId.replace(/-/g,'').substring(0,8)+'_'+iid);
   if (tci) tci.classList.add('selected');
-}
-
-// ===== SUBMIT TODO =====
-async function submitTodo(itemId) {
-  const token = localStorage.getItem('notion_token');
-  if (!token) { alert('請先設定 Notion Token'); return; }
-  const item = queue.find(q=>q.id===itemId);
-  if (!item) return;
-
-  const name = document.getElementById('todo-name_'+itemId)?.innerText.trim();
-  const dateRaw = document.getElementById('todo-date_'+itemId)?.value;
-
-  const btn = document.querySelector(`#rc_${itemId} .btn-submit`);
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>寫入中...'; }
-
-  try {
-    const properties = {
-      'ToDo': { title: [{ text: { content: name } }] },
-      'AI 審核狀態': { select: { name: '待核實' } },
-      'AI判斷理由': { rich_text: [{ text: { content: item.result?.reason || '' } }] },
-    };
-    if (dateRaw) properties['DoOn'] = { date: { start: dateRaw } };
-    if (item.selectedCP?.id) properties['所屬查核點'] = { relation: [{ id: item.selectedCP.id }] };
-
-    const res = await fetch(`${PROXY}/v1/pages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
-      body: JSON.stringify({ parent: { database_id: DB_IDS.todo }, properties }),
-    });
-    if (!res.ok) { const e = await res.json(); throw new Error(e.message || '寫入失敗'); }
-
-    item.status = 'done';
-    renderQueue();
-    const card = document.getElementById('rc_'+itemId);
-    if (card) card.innerHTML = `<div class="status-msg success">✅ 已建立：${name}<br><small style="color:var(--muted)">${item.selectedPlan?.name||''} › ${item.selectedProj?.name||''} › ${item.selectedCP?.name||''}</small></div>`;
-    saveHistory({ name, doOn: dateRaw, plan: item.selectedPlan?.name, project: item.selectedProj?.name, checkpoint: item.selectedCP?.name });
-
-    // Auto select next pending
-    const next = queue.find(q=>q.status==='pending'&&q.id!==itemId);
-    if (next) { activeId = next.id; renderQueue(); renderReview(next); }
-
-  } catch(e) {
-    if (btn) { btn.disabled = false; btn.textContent = '✅ 確認寫入 Notion'; }
-    document.getElementById('submit-status_'+itemId).innerHTML = `<div class="status-msg error" style="margin-top:10px">❌ ${e.message}</div>`;
-  }
 }
 
 function skipItem(itemId) {
