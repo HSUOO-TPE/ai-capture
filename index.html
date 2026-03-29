@@ -392,7 +392,12 @@ function buildCtx() {
 }
 
 function buildPrompt(text, source, ctx) {
+  var today = new Date();
+  var weekdays = ['日','一','二','三','四','五','六'];
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  var todayWeekday = '週' + weekdays[today.getDay()];
   return '你是 Notion 待辦事項建立助手。根據輸入內容，判斷應建立哪個待辦事項並對應到正確的查核點。\n\n'
+    + '## 今天的日期\n今天是 ' + todayStr + '（' + todayWeekday + '）。請根據此日期推算「這週X」、「下週X」、「明天」等相對日期。doOn 請輸出 YYYY-MM-DD 格式。\n\n'
     + '## Notion 結構\n計劃：' + JSON.stringify(ctx.plans) + '\n'
     + '專案（含所屬計劃ID）：' + JSON.stringify(ctx.projects) + '\n'
     + '查核點（含所屬專案ID）：' + JSON.stringify(ctx.checkpoints) + '\n\n'
