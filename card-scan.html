@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>名片掃描 → Notion</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--card:#fff;--border:#e0ddd6;
+  --text:#1a1a1a;--muted:#6b6860;--accent:#e8571a;--ah:#c94a14;
+  --teal:#0f6e56;--success:#1d9e75;--amber:#ba7517;--purple:#534ab7;
+  --tag:#f0ede6;--warn:#f59e0b
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+
+.hd{background:var(--card);border-bottom:1px solid var(--border);padding:11px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.logo{font-size:15px;font-weight:600;color:var(--accent)}
+.hd-r{display:flex;gap:8px}
+.bsm{background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:13px;color:var(--muted);cursor:pointer}
+.bsm:hover{border-color:var(--accent);color:var(--accent)}
+
+.main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+
+/* SETUP */
+.setup{background:#fdf2ec;border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.setup-t{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.setup-b{font-size:13px;color:var(--text);line-height:1.6}
+
+/* STEP 1 */
+.ia{width:100%;min-height:140px;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:14px;font-family:inherit;color:var(--text);background:var(--bg);resize:vertical;outline:none;line-height:1.6}
+.ia:focus{border-color:var(--accent);background:#fff}
+.ia::placeholder{color:#bbb}
+
+.date-row{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+.date-label{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
+input[type=date]{border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:14px;font-family:inherit;color:var(--text);background:var(--bg);outline:none}
+input[type=date]:focus{border-color:var(--accent);background:#fff}
+.bparse{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;margin-left:auto}
+.bparse:hover{background:var(--ah)}
+.bparse:disabled{background:#ccc;cursor:not-allowed}
+
+/* STATUS */
+.smsg{text-align:center;padding:12px;font-size:14px;border-radius:10px;margin-bottom:14px}
+.smsg.ok{background:#e6f7f1;color:var(--success);border:1px solid #9fe1cb}
+.smsg.err{background:#fce8e8;color:#a32d2d;border:1px solid #f09595}
+.smsg.loading{background:var(--tag);color:var(--muted)}
+
+/* TODO LIST */
+.todo-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.todo-tag{border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer;background:var(--card);transition:all .1s}
+.todo-tag:hover{border-color:var(--accent);color:var(--accent)}
+.todo-tag.sel{border-color:var(--accent);color:var(--accent);background:#fdf2ec;font-weight:600}
+
+/* CONTACT CARD */
+.contact-block{border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;background:var(--bg)}
+.contact-block.done{opacity:.6;border-style:dashed}
+.cb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.cb-title{font-size:14px;font-weight:600;color:var(--text)}
+.vendor-status{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+.vs-exists{background:#e6f7f1;color:var(--success)}
+.vs-similar{background:#fef3c7;color:var(--amber)}
+.vs-new{background:#f0ede6;color:var(--muted)}
+
+/* FIELDS */
+.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:560px){.fields-grid{grid-template-columns:1fr}}
+.fl{display:flex;flex-direction:column;gap:4px}
+.fl.full{grid-column:1/-1}
+.fl-lb{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fv{font-size:14px;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;width:100%;outline:none;font-family:inherit}
+.fv:focus{border-color:var(--accent);background:#fff}
+
+/* MULTI SELECT */
+.ms-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.ms-chip{border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--muted);cursor:pointer;background:var(--card)}
+.ms-chip:hover{border-color:var(--accent);color:var(--accent)}
+.ms-chip.sel{border-color:var(--accent);color:var(--accent);background:#fdf2ec;font-weight:600}
+
+/* VENDOR MATCH */
+.vendor-match{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:9px 12px;font-size:13px;color:#92400e;margin-bottom:10px}
+.vendor-match b{font-weight:600}
+
+/* TODO RELATION */
+.todo-rel{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.todo-rel-chip{border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:12px;color:var(--muted);cursor:pointer;background:var(--card)}
+.todo-rel-chip:hover{border-color:var(--accent);color:var(--accent)}
+.todo-rel-chip.sel{border-color:var(--success);color:var(--success);background:#e6f7f1;font-weight:600}
+
+/* ACTIONS */
+.cb-actions{display:flex;gap:8px;margin-top:12px}
+.bwrite{background:var(--success);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer}
+.bwrite:hover{background:#0a8a63}
+.bwrite:disabled{background:#ccc;cursor:not-allowed}
+.bskip{background:none;border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;color:var(--muted);cursor:pointer}
+.bskip:hover{border-color:#aaa}
+.written-msg{font-size:13px;color:var(--success);font-weight:600;padding:8px 0}
+
+/* SUBMIT ALL */
+.submit-all-wrap{text-align:center;margin-top:8px}
+.bsubmitall{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 32px;font-size:15px;font-weight:600;cursor:pointer}
+.bsubmitall:hover{background:var(--ah)}
+.bsubmitall:disabled{background:#ccc;cursor:not-allowed}
+
+/* SETTINGS */
+.pg{padding:18px;max-width:520px}
+.pgc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.pgt{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.pgf{margin-bottom:14px}
+.pgl{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.pgh{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.5}
+.pgi{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:monospace;color:var(--text);background:var(--bg);outline:none}
+.pgi:focus{border-color:var(--accent);background:#fff}
+.bsave{background:var(--purple);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;margin-right:7px}
+.bsync{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.sync-st{margin-top:9px;font-size:13px;color:var(--muted)}
+
+.sp{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
+.sp-dark{display:inline-block;width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--muted);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="logo">🪪 名片掃描 → Notion</div>
+  <div class="hd-r">
+    <button class="bsm" onclick="gopage('settings')">設定</button>
+    <button class="bsm" onclick="location.href='https://hsuoo-tpe.github.io/ai-capture/'">AI Capture</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="view-main" class="main">
+  <div class="setup" id="setup-notice" style="display:none">
+    <div class="setup-t">⚙️ 請先完成設定</div>
+    <div class="setup-b">點右上角「設定」，填入 Notion Token 與 Claude API Key。</div>
+  </div>
+
+  <!-- STEP 1: 輸入名片 -->
+  <div class="card">
+    <div class="card-title">Step 1 　貼入名片判讀文字</div>
+    <textarea class="ia" id="card-input" placeholder="貼入 GPT / Gemini 判讀的名片文字&#10;多筆名片用空白行或 --- 分隔&#10;&#10;例如：&#10;姓名：王小明&#10;職稱：業務經理&#10;公司：ABC科技股份有限公司&#10;Email：ming@abc.com&#10;電話：0912-345-678&#10;---&#10;姓名：李美麗..."></textarea>
+
+    <div class="date-row">
+      <span class="date-label">📅 認識日期</span>
+      <input type="date" id="meet-date" value="">
+      <button class="bparse" id="btn-parse" onclick="doParse()">🔍 解析名片</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Todo 關聯 -->
+  <div class="card" id="todo-card" style="display:none">
+    <div class="card-title">Step 2 　關聯當天會議 Todo（可多選）</div>
+    <div id="todo-status" style="font-size:13px;color:var(--muted)">查詢中...</div>
+    <div class="todo-list" id="todo-list"></div>
+  </div>
+
+  <!-- STEP 3: 名片解析結果 -->
+  <div id="contacts-area"></div>
+
+  <!-- SUBMIT ALL -->
+  <div class="submit-all-wrap" id="submit-all-wrap" style="display:none">
+    <button class="bsubmitall" onclick="submitAll()">✅ 全部寫入 Notion</button>
+    <div id="submit-all-status" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="view-settings" style="display:none">
+  <div class="pg">
+    <div class="pgc">
+      <div class="pgt">設定</div>
+      <div class="pgf">
+        <div class="pgl">Notion API Token</div>
+        <div class="pgh">ANTIGRAVITY Integration Token（secret_... 或 ntn_... 開頭）</div>
+        <input class="pgi" type="password" id="ntoken" placeholder="secret_...">
+      </div>
+      <div class="pgf">
+        <div class="pgl">Claude API Key</div>
+        <div class="pgh">Anthropic API Key（sk-ant-... 開頭）</div>
+        <input class="pgi" type="password" id="ckey" placeholder="sk-ant-...">
+      </div>
+      <button class="bsave" onclick="saveCfg()">💾 儲存</button>
+      <button class="bsync" onclick="doSyncVendors()">🔄 同步廠商資料庫</button>
+      <div class="sync-st" id="syncst"></div>
+    </div>
+    <div class="pgc" id="syncinfo" style="display:none">
+      <div class="pgt">已同步廠商資料</div>
+      <div id="syncinfo-body" style="font-size:13px;color:var(--muted);line-height:1.9"></div>
+    </div>
+    <div class="pgc">
+      <div class="pgt">說明</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.9">
+        廠商比對需先同步廠商資料庫。<br>
+        新增廠商後建議重新同步。<br>
+        名片原始文字會寫入聯絡人頁面 body。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var PROXY = 'https://notion-proxy.tca-hsuoo.workers.dev/notion';
+var DBS = {
+  contact: '2199cedd371d801591ecf2849f459467',
+  vendor:  '2199cedd371d80fb8332c76b7b0e6916',
+  todo:    '2039cedd371d8010ae84f60c29f86990'
+};
+var MS_OPTIONS = ['法人','學','媒','官','地方政府','協力','百貨','電信','通訊'];
+
+var vendorCache = null;
+var todoResults = [];
+var selectedTodos = [];
+var contacts = [];
+
+// INIT
+window.onload = function() {
+  var t = ls('notion_token'), k = ls('claude_key');
+  var n = document.getElementById('ntoken'), c = document.getElementById('ckey');
+  if (n && t) n.value = t;
+  if (c && k) c.value = k;
+  if (!t || !k) document.getElementById('setup-notice').style.display = 'block';
+  var vc = ls('vendor_cache');
+  if (vc) { vendorCache = JSON.parse(vc); showSyncInfo(); }
+  // default date = today
+  var today = new Date();
+  document.getElementById('meet-date').value = today.toISOString().substring(0,10);
+};
+
+function ls(k, v) {
+  if (v !== undefined) { localStorage.setItem(k, v); return; }
+  return localStorage.getItem(k);
+}
+
+function gopage(p) {
+  document.getElementById('view-main').style.display = p === 'main' ? 'block' : 'none';
+  document.getElementById('view-settings').style.display = p === 'settings' ? 'block' : 'none';
+}
+
+// ===== PARSE =====
+function doParse() {
+  var text = document.getElementById('card-input').value.trim();
+  if (!text) { alert('請先貼入名片文字'); return; }
+  var ckey = ls('claude_key');
+  if (!ckey) { alert('請先在設定中填入 Claude API Key'); return; }
+
+  var btn = document.getElementById('btn-parse');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="sp"></span>解析中...';
+
+  var dateVal = document.getElementById('meet-date').value;
+
+  // 1. Query todos for that date
+  fetchTodos(dateVal);
+
+  // 2. Parse cards with Claude
+  parseCards(text, ckey)
+    .then(function(parsed) {
+      contacts = parsed;
+      renderContacts();
+      document.getElementById('submit-all-wrap').style.display = 'block';
+    })
+    .catch(function(e) {
+      document.getElementById('contacts-area').innerHTML = '<div class="smsg err">❌ 解析失敗：' + esc(e.message) + '</div>';
+    })
+    .finally(function() {
+      btn.disabled = false;
+      btn.textContent = '🔍 解析名片';
+    });
+}
+
+// ===== FETCH TODOS =====
+function fetchTodos(dateStr) {
+  var token = ls('notion_token');
+  if (!token || !dateStr) return;
+  var card = document.getElementById('todo-card');
+  card.style.display = 'block';
+  document.getElementById('todo-status').textContent = '查詢中...';
+
+  var body = {
+    filter: {
+      and: [
+        { property: 'DoOn', date: { equals: dateStr } },
+        { or: [
+          { property: 'ToDo', rich_text: { contains: '會議' } },
+          { property: 'ToDo', rich_text: { contains: 'meeting' } },
+          { property: 'ToDo', rich_text: { contains: 'Meeting' } },
+          { property: 'ToDo', rich_text: { contains: '拜訪' } }
+        ]}
+      ]
+    },
+    page_size: 50
+  };
+
+  fetch(PROXY + '/v1/databases/' + DBS.todo + '/query', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
+    body: JSON.stringify(body)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    todoResults = (data.results || []).map(function(p) {
+      var props = p.properties;
+      var name = '';
+      if (props['ToDo'] && props['ToDo'].title) name = props['ToDo'].title.map(function(t) { return t.plain_text; }).join('');
+      return { id: p.id, name: name };
+    }).filter(function(t) { return t.name; });
+
+    if (todoResults.length === 0) {
+      document.getElementById('todo-status').textContent = '當天沒有找到會議相關 Todo';
+    } else {
+      document.getElementById('todo-status').textContent = '找到 ' + todoResults.length + ' 筆，點選要關聯的：';
+    }
+
+    var list = document.getElementById('todo-list');
+    list.innerHTML = todoResults.map(function(t) {
+      return '<div class="todo-tag" id="gtag_' + safeId(t.id) + '" onclick="toggleTodo(\'' + t.id + '\')">' + esc(t.name) + '</div>';
+    }).join('');
+  })
+  .catch(function() {
+    document.getElementById('todo-status').textContent = '查詢失敗，請確認 Notion Token';
+  });
+}
+
+function toggleTodo(id) {
+  var idx = selectedTodos.indexOf(id);
+  if (idx >= 0) selectedTodos.splice(idx, 1);
+  else selectedTodos.push(id);
+  document.querySelectorAll('[id^="gtag_"]').forEach(function(el) { el.classList.remove('sel'); });
+  selectedTodos.forEach(function(tid) {
+    var el = document.getElementById('gtag_' + safeId(tid));
+    if (el) el.classList.add('sel');
+  });
+  // update all contact blocks
+  contacts.forEach(function(_, i) { renderTodoRel(i); });
+}
+
+// ===== PARSE CARDS =====
+function parseCards(text, ckey) {
+  var prompt = '你是名片解析助手。請解析以下名片文字，多筆名片用---或空白行分隔。'
+    + '對每張名片，預判廠商類型（從以下選項選0~3個）：法人、學、媒、官、地方政府、協力、百貨、電信、通訊。'
+    + '\n\n回傳純 JSON 陣列，每筆格式：\n'
+    + '{"name":"姓名","title":"職稱","department":"部門","company":"公司名稱","email":"email","phone":"電話","multiSelect":["預判標籤"]}\n\n'
+    + '名片文字：\n' + text;
+
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ckey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(e) { throw new Error(e.error && e.error.message ? e.error.message : 'Claude API 錯誤'); });
+    return res.json();
+  })
+  .then(function(data) {
+    var raw = data.content[0].text.replace(/```json|```/g, '').trim();
+    var parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) parsed = [parsed];
+    // match vendor
+    return parsed.map(function(c) {
+      var match = matchVendor(c.company || '');
+      return Object.assign({}, c, { vendorMatch: match, writtenVendorId: match && match.status === 'exists' ? match.id : null });
+    });
+  });
+}
+
+// ===== VENDOR MATCH =====
+function matchVendor(companyName) {
+  if (!vendorCache || !vendorCache.length || !companyName) return null;
+  var name = companyName.trim().toLowerCase();
+  // exact match
+  for (var i = 0; i < vendorCache.length; i++) {
+    if (vendorCache[i].name.toLowerCase() === name) return { status: 'exists', id: vendorCache[i].id, name: vendorCache[i].name };
+  }
+  // fuzzy: check if query contains vendor or vendor contains query (min 2 chars overlap)
+  var best = null, bestScore = 0;
+  for (var j = 0; j < vendorCache.length; j++) {
+    var vn = vendorCache[j].name.toLowerCase();
+    var score = 0;
+    if (vn.indexOf(name) >= 0 || name.indexOf(vn) >= 0) score = 2;
+    else {
+      // char overlap
+      var overlap = 0;
+      for (var k = 0; k < name.length; k++) { if (vn.indexOf(name[k]) >= 0) overlap++; }
+      score = overlap / Math.max(name.length, vn.length);
+    }
+    if (score > bestScore) { bestScore = score; best = vendorCache[j]; }
+  }
+  if (bestScore >= 0.5 && best) return { status: 'similar', id: best.id, name: best.name };
+  return { status: 'new', id: null, name: companyName };
+}
+
+// ===== RENDER CONTACTS =====
+function renderContacts() {
+  var area = document.getElementById('contacts-area');
+  if (!contacts.length) { area.innerHTML = '<div class="smsg err">無法解析名片，請確認格式</div>'; return; }
+  area.innerHTML = '<div class="card"><div class="card-title">Step 3 　確認並寫入（共 ' + contacts.length + ' 筆）</div>'
+    + contacts.map(function(c, i) { return renderContactBlock(c, i); }).join('') + '</div>';
+}
+
+function renderContactBlock(c, i) {
+  var vm = c.vendorMatch;
+  var statusHtml = '';
+  var matchWarn = '';
+  if (vm) {
+    if (vm.status === 'exists') statusHtml = '<span class="vendor-status vs-exists">✅ 廠商已存在</span>';
+    else if (vm.status === 'similar') {
+      statusHtml = '<span class="vendor-status vs-similar">⚠️ 疑似相同</span>';
+      matchWarn = '<div class="vendor-match">偵測到相似廠商：<b>' + esc(vm.name) + '</b>，請確認是否為同一廠商</div>';
+    }
+    else statusHtml = '<span class="vendor-status vs-new">➕ 新廠商</span>';
+  }
+
+  var msHtml = MS_OPTIONS.map(function(opt) {
+    var sel = (c.multiSelect || []).indexOf(opt) >= 0 ? ' sel' : '';
+    return '<div class="ms-chip' + sel + '" id="ms_' + i + '_' + opt + '" onclick="toggleMs(' + i + ',\'' + opt + '\')">' + opt + '</div>';
+  }).join('');
+
+  var todoRelHtml = todoResults.length > 0 ? '<div class="fl full"><div class="fl-lb">關聯 Todo</div>'
+    + '<div class="todo-rel" id="trel_' + i + '">'
+    + todoResults.map(function(t) {
+        var isSel = selectedTodos.indexOf(t.id) >= 0 ? ' sel' : '';
+        return '<div class="todo-rel-chip' + isSel + '" id="trelc_' + i + '_' + safeId(t.id) + '" onclick="toggleTodoRel(' + i + ',\'' + t.id + '\')">' + esc(t.name) + '</div>';
+      }).join('') + '</div></div>' : '';
+
+  return '<div class="contact-block" id="cb_' + i + '">'
+    + '<div class="cb-header"><div class="cb-title">👤 ' + esc(c.name || '（未知）') + '</div>' + statusHtml + '</div>'
+    + matchWarn
+    + '<div class="fields-grid">'
+    + field('姓名', 'f_name_' + i, c.name || '')
+    + field('職稱', 'f_title_' + i, c.title || '')
+    + field('部門', 'f_dept_' + i, c.department || '')
+    + field('Email', 'f_email_' + i, c.email || '')
+    + field('電話', 'f_phone_' + i, c.phone || '')
+    + fieldFull('所屬廠商', 'f_company_' + i, c.company || '')
+    + '</div>'
+    + '<div class="fl"><div class="fl-lb">廠商分類（Multi-select）</div><div class="ms-wrap">' + msHtml + '</div></div>'
+    + '<div style="height:10px"></div>'
+    + todoRelHtml
+    + '<div class="cb-actions">'
+    + '<button class="bwrite" id="bw_' + i + '" onclick="writeContact(' + i + ')">✅ 寫入 Notion</button>'
+    + '<button class="bskip" onclick="skipContact(' + i + ')">略過</button>'
+    + '</div>'
+    + '<div id="cbst_' + i + '"></div>'
+    + '</div>';
+}
+
+function field(label, id, val) {
+  return '<div class="fl"><div class="fl-lb">' + label + '</div><input class="fv" id="' + id + '" type="text" value="' + esc(val) + '"></div>';
+}
+function fieldFull(label, id, val) {
+  return '<div class="fl full"><div class="fl-lb">' + label + '</div><input class="fv" id="' + id + '" type="text" value="' + esc(val) + '"></div>';
+}
+
+function toggleMs(i, opt) {
+  var el = document.getElementById('ms_' + i + '_' + opt);
+  if (!el) return;
+  if (!contacts[i].multiSelect) contacts[i].multiSelect = [];
+  var idx = contacts[i].multiSelect.indexOf(opt);
+  if (idx >= 0) { contacts[i].multiSelect.splice(idx, 1); el.classList.remove('sel'); }
+  else { contacts[i].multiSelect.push(opt); el.classList.add('sel'); }
+}
+
+function toggleTodoRel(i, todoId) {
+  if (!contacts[i].todoRel) contacts[i].todoRel = selectedTodos.slice();
+  var arr = contacts[i].todoRel;
+  var idx = arr.indexOf(todoId);
+  if (idx >= 0) arr.splice(idx, 1);
+  else arr.push(todoId);
+  renderTodoRel(i);
+}
+
+function renderTodoRel(i) {
+  var el = document.getElementById('trel_' + i);
+  if (!el) return;
+  if (!contacts[i].todoRel) contacts[i].todoRel = selectedTodos.slice();
+  todoResults.forEach(function(t) {
+    var chip = document.getElementById('trelc_' + i + '_' + safeId(t.id));
+    if (!chip) return;
+    chip.classList.toggle('sel', contacts[i].todoRel.indexOf(t.id) >= 0);
+  });
+}
+
+function skipContact(i) {
+  var block = document.getElementById('cb_' + i);
+  if (block) block.classList.add('done');
+  contacts[i].skipped = true;
+}
+
+// ===== WRITE CONTACT =====
+function writeContact(i) {
+  var token = ls('notion_token');
+  if (!token) { alert('請先設定 Notion Token'); return; }
+  var c = contacts[i];
+  if (c.skipped) return;
+
+  var name = getVal('f_name_' + i);
+  var title = getVal('f_title_' + i);
+  var dept = getVal('f_dept_' + i);
+  var email = getVal('f_email_' + i);
+  var phone = getVal('f_phone_' + i);
+  var company = getVal('f_company_' + i);
+  var ms = c.multiSelect || [];
+  var todoRel = c.todoRel !== undefined ? c.todoRel : selectedTodos.slice();
+
+  var btn = document.getElementById('bw_' + i);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="sp"></span>寫入中...'; }
+
+  // Step A: handle vendor
+  handleVendor(token, company, ms, c.vendorMatch)
+    .then(function(vendorId) {
+      // Step B: create contact
+      var props = {
+        '姓名': { title: [{ text: { content: name } }] },
+        'AI審核': { select: { name: '待確認' } }
+      };
+      if (email) props['Email'] = { email: email };
+      if (phone) props['Phone Number'] = { phone_number: phone };
+      if (title) props['職稱'] = { rich_text: [{ text: { content: title } }] };
+      if (dept) props['部門'] = { rich_text: [{ text: { content: dept } }] };
+      if (vendorId) props['所屬廠商單位'] = { relation: [{ id: vendorId }] };
+      if (todoRel.length > 0) props['關聯todo'] = { relation: todoRel.map(function(id) { return { id: id }; }) };
+
+      // page body: 名片原始資訊
+      var rawText = document.getElementById('card-input').value.trim();
+      var children = [
+        { object: 'block', type: 'heading_3', heading_3: { rich_text: [{ text: { content: '名片原始資訊' } }] } },
+        { object: 'block', type: 'code', code: { language: 'plain text', rich_text: [{ text: { content: rawText } }] } }
+      ];
+
+      return fetch(PROXY + '/v1/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
+        body: JSON.stringify({ parent: { database_id: DBS.contact }, properties: props, children: children })
+      });
+    })
+    .then(function(res) {
+      if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || '寫入失敗'); });
+      return res.json();
+    })
+    .then(function() {
+      contacts[i].written = true;
+      var block = document.getElementById('cb_' + i);
+      if (block) {
+        block.classList.add('done');
+        var actions = block.querySelector('.cb-actions');
+        if (actions) actions.innerHTML = '<div class="written-msg">✅ 已寫入 Notion</div>';
+      }
+    })
+    .catch(function(e) {
+      if (btn) { btn.disabled = false; btn.textContent = '✅ 寫入 Notion'; }
+      var st = document.getElementById('cbst_' + i);
+      if (st) st.innerHTML = '<div class="smsg err" style="margin-top:8px">❌ ' + esc(e.message) + '</div>';
+    });
+}
+
+// ===== HANDLE VENDOR =====
+function handleVendor(token, companyName, ms, vendorMatch) {
+  if (!companyName) return Promise.resolve(null);
+
+  // If exact match exists, use it
+  if (vendorMatch && vendorMatch.status === 'exists' && vendorMatch.id) {
+    return Promise.resolve(vendorMatch.id);
+  }
+
+  // If similar, user confirmed in UI - use existing
+  if (vendorMatch && vendorMatch.status === 'similar' && vendorMatch.id) {
+    // Check if user kept the same company name (meaning they accept the match)
+    if (companyName.trim().toLowerCase() === vendorMatch.name.toLowerCase()) {
+      return Promise.resolve(vendorMatch.id);
+    }
+  }
+
+  // Create new vendor
+  var props = {
+    '公司名稱': { title: [{ text: { content: companyName } }] }
+  };
+  if (ms && ms.length > 0) {
+    props['Multi-select'] = { multi_select: ms.map(function(m) { return { name: m }; }) };
+  }
+
+  return fetch(PROXY + '/v1/pages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
+    body: JSON.stringify({ parent: { database_id: DBS.vendor }, properties: props })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) { return data.id || null; });
+}
+
+// ===== SUBMIT ALL =====
+function submitAll() {
+  var pending = contacts.filter(function(c, i) { return !c.written && !c.skipped; });
+  if (pending.length === 0) { document.getElementById('submit-all-status').textContent = '所有名片都已處理完畢'; return; }
+  var btn = document.querySelector('.bsubmitall');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="sp"></span>寫入中...';
+
+  var idx = 0;
+  function next() {
+    while (idx < contacts.length && (contacts[idx].written || contacts[idx].skipped)) idx++;
+    if (idx >= contacts.length) {
+      btn.disabled = false;
+      btn.textContent = '✅ 全部完成';
+      document.getElementById('submit-all-status').textContent = '所有名片已寫入 Notion';
+      return;
+    }
+    writeContactPromise(idx)
+      .then(function() { idx++; next(); })
+      .catch(function(e) {
+        document.getElementById('submit-all-status').innerHTML = '<span style="color:#a32d2d">第 ' + (idx+1) + ' 筆失敗：' + esc(e.message) + '</span>';
+        btn.disabled = false;
+        btn.textContent = '✅ 全部寫入 Notion';
+      });
+  }
+  next();
+}
+
+function writeContactPromise(i) {
+  return new Promise(function(resolve, reject) {
+    var origWrite = writeContact;
+    // Simulate click and capture result
+    var token = ls('notion_token');
+    var c = contacts[i];
+    var name = getVal('f_name_' + i);
+    var title = getVal('f_title_' + i);
+    var dept = getVal('f_dept_' + i);
+    var email = getVal('f_email_' + i);
+    var phone = getVal('f_phone_' + i);
+    var company = getVal('f_company_' + i);
+    var ms = c.multiSelect || [];
+    var todoRel = c.todoRel !== undefined ? c.todoRel : selectedTodos.slice();
+
+    handleVendor(token, company, ms, c.vendorMatch)
+      .then(function(vendorId) {
+        var props = { '姓名': { title: [{ text: { content: name } }] }, 'AI審核': { select: { name: '待確認' } } };
+        if (email) props['Email'] = { email: email };
+        if (phone) props['Phone Number'] = { phone_number: phone };
+        if (title) props['職稱'] = { rich_text: [{ text: { content: title } }] };
+        if (dept) props['部門'] = { rich_text: [{ text: { content: dept } }] };
+        if (vendorId) props['所屬廠商單位'] = { relation: [{ id: vendorId }] };
+        if (todoRel.length > 0) props['關聯todo'] = { relation: todoRel.map(function(id) { return { id: id }; }) };
+        var rawText = document.getElementById('card-input').value.trim();
+        var children = [
+          { object: 'block', type: 'heading_3', heading_3: { rich_text: [{ text: { content: '名片原始資訊' } }] } },
+          { object: 'block', type: 'code', code: { language: 'plain text', rich_text: [{ text: { content: rawText } }] } }
+        ];
+        return fetch(PROXY + '/v1/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
+          body: JSON.stringify({ parent: { database_id: DBS.contact }, properties: props, children: children })
+        });
+      })
+      .then(function(res) {
+        if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || '寫入失敗'); });
+        return res.json();
+      })
+      .then(function() {
+        contacts[i].written = true;
+        var block = document.getElementById('cb_' + i);
+        if (block) {
+          block.classList.add('done');
+          var actions = block.querySelector('.cb-actions');
+          if (actions) actions.innerHTML = '<div class="written-msg">✅ 已寫入</div>';
+        }
+        resolve();
+      })
+      .catch(reject);
+  });
+}
+
+// ===== SYNC VENDORS =====
+function doSyncVendors() {
+  var token = ls('notion_token');
+  if (!token) { alert('請先儲存 Notion Token'); return; }
+  var btn = document.querySelector('.bsync');
+  var st = document.getElementById('syncst');
+  btn.textContent = '⏳ 同步中...'; btn.disabled = true;
+  st.textContent = '正在讀取廠商資料庫...';
+
+  var results = [];
+  function go(cursor) {
+    var body = { page_size: 100 };
+    if (cursor) body.start_cursor = cursor;
+    return fetch(PROXY + '/v1/databases/' + DBS.vendor + '/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28' },
+      body: JSON.stringify(body)
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      (data.results || []).forEach(function(p) {
+        var props = p.properties;
+        var name = '';
+        if (props['公司名稱'] && props['公司名稱'].title) name = props['公司名稱'].title.map(function(t) { return t.plain_text; }).join('');
+        if (name.trim()) results.push({ id: p.id, name: name.trim() });
+      });
+      if (data.has_more && data.next_cursor) return go(data.next_cursor);
+    });
+  }
+
+  go(null)
+    .then(function() {
+      vendorCache = results;
+      ls('vendor_cache', JSON.stringify(results));
+      st.textContent = '✅ 同步完成：' + results.length + ' 家廠商';
+      showSyncInfo();
+    })
+    .catch(function(e) { st.textContent = '❌ 同步失敗：' + e.message; })
+    .finally(function() { btn.textContent = '🔄 同步廠商資料庫'; btn.disabled = false; });
+}
+
+function showSyncInfo() {
+  if (!vendorCache) return;
+  document.getElementById('syncinfo').style.display = 'block';
+  document.getElementById('syncinfo-body').innerHTML = '廠商數量：' + vendorCache.length + ' 家<br>（下次新增廠商後請重新同步）';
+}
+
+// ===== SETTINGS =====
+function saveCfg() {
+  var t = document.getElementById('ntoken').value.trim();
+  var k = document.getElementById('ckey').value.trim();
+  if (!t || !k) { alert('請填入兩個 Token'); return; }
+  ls('notion_token', t); ls('claude_key', k);
+  document.getElementById('setup-notice').style.display = 'none';
+  alert('✅ 已儲存！請點「同步廠商資料庫」');
+  gopage('main');
+}
+
+// ===== UTILS =====
+function getVal(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function safeId(s) { return String(s).replace(/[^a-z0-9]/g, ''); }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
