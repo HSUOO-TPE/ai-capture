@@ -336,8 +336,11 @@ function toggleTodo(id) {
     var el = document.getElementById('gtag_' + safeId(tid));
     if (el) el.classList.add('sel');
   });
-  // update all contact blocks
-  contacts.forEach(function(_, i) { renderTodoRel(i); });
+  // sync selectedTodos into all contacts that haven't been individually customized
+  contacts.forEach(function(c, i) {
+    c.todoRel = selectedTodos.slice();
+    renderTodoRel(i);
+  });
 }
 
 // ===== PARSE CARDS =====
@@ -472,7 +475,7 @@ function toggleMs(i, opt) {
 }
 
 function toggleTodoRel(i, todoId) {
-  if (!contacts[i].todoRel) contacts[i].todoRel = selectedTodos.slice();
+  if (contacts[i].todoRel === undefined) contacts[i].todoRel = selectedTodos.slice();
   var arr = contacts[i].todoRel;
   var idx = arr.indexOf(todoId);
   if (idx >= 0) arr.splice(idx, 1);
@@ -483,7 +486,7 @@ function toggleTodoRel(i, todoId) {
 function renderTodoRel(i) {
   var el = document.getElementById('trel_' + i);
   if (!el) return;
-  if (!contacts[i].todoRel) contacts[i].todoRel = selectedTodos.slice();
+  if (contacts[i].todoRel === undefined) contacts[i].todoRel = selectedTodos.slice();
   todoResults.forEach(function(t) {
     var chip = document.getElementById('trelc_' + i + '_' + safeId(t.id));
     if (!chip) return;
@@ -512,6 +515,7 @@ function writeContact(i) {
   var company = getVal('f_company_' + i);
   var ms = c.multiSelect || [];
   var todoRel = c.todoRel !== undefined ? c.todoRel : selectedTodos.slice();
+  if (todoRel.length === 0) todoRel = selectedTodos.slice();
 
   var btn = document.getElementById('bw_' + i);
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="sp"></span>寫入中...'; }
@@ -640,6 +644,7 @@ function writeContactPromise(i) {
     var company = getVal('f_company_' + i);
     var ms = c.multiSelect || [];
     var todoRel = c.todoRel !== undefined ? c.todoRel : selectedTodos.slice();
+  if (todoRel.length === 0) todoRel = selectedTodos.slice();
 
     handleVendor(token, company, ms, c.vendorMatch)
       .then(function(vendorId) {
