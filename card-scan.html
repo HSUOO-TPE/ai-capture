@@ -229,7 +229,7 @@ function toggleTodo(id){
 }
 
 function parseCards(text,ckey){
-  var prompt='你是名片解析助手。請解析以下名片文字，多筆名片用---或空白行分隔。對每張名片，預判廠商類型（從以下選項選0~3個）：法人、學、媒、官、地方政府、協力、百貨、電信、通訊。\n\n回傳純 JSON 陣列，每筆格式：\n{"name":"姓名","title":"職稱","department":"部門","company":"公司名稱","email":"email","phone":"電話","multiSelect":["預判標籤"]}\n\n若無法解析某欄位請填空字串。名片文字：\n'+text;
+  var prompt='你是名片解析助手。請解析以下名片文字，多筆名片用---或空白行分隔。對每張名片，預判廠商類型（從以下選項選0~3個）：法人、學、媒、官、地方政府、協力、百貨、電信、通訊。\n\nphone 欄位規則：手機號碼優先（0開頭的10碼）；若無手機才填市話；若兩者都有，只填手機。\n\n回傳純 JSON 陣列，每筆格式：\n{"name":"姓名","title":"職稱","department":"部門","company":"公司名稱","email":"email","phone":"手機優先的電話號碼","multiSelect":["預判標籤"]}\n\n若無法解析某欄位請填空字串。名片文字：\n'+text;
   return fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':ckey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})})
   .then(function(res){if(!res.ok)return res.json().then(function(e){throw new Error(e.error&&e.error.message?e.error.message:'Claude API 錯誤');});return res.json();})
   .then(function(data){var raw=data.content[0].text.replace(/```json|```/g,'').trim();var parsed=JSON.parse(raw);if(!Array.isArray(parsed))parsed=[parsed];return parsed.map(function(c){return Object.assign({},c,{vendorMatch:matchVendor(c.company||'')});});});
